@@ -17,7 +17,7 @@ import org.bukkit.material.Directional
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
 
-// TODO: buckets!
+// TODO: sign
 
 class InteractablePlaceListener : Listener {
     val replaceable = setOf(
@@ -59,6 +59,24 @@ class InteractablePlaceListener : Listener {
         Material.JACK_O_LANTERN,
     )
 
+    val bypassOccupied = setOf(
+        Material.LADDER,
+        Material.STONE_BUTTON,
+        Material.LEVER,
+        Material.WATER_BUCKET,
+        Material.LAVA_BUCKET,
+    )
+
+    val preventReplication = setOf(
+        Material.LADDER,
+        Material.STONE_BUTTON,
+        Material.LEVER,
+        Material.TORCH,
+        Material.REDSTONE_TORCH_ON,
+        Material.REDSTONE_TORCH_OFF,
+        Material.TRAP_DOOR,
+    )
+
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
         val (player, clicked, direction, target, item) = event.contextOrNull()
@@ -72,7 +90,8 @@ class InteractablePlaceListener : Listener {
         if (item.type === Material.AIR) return
         if (target.type !in replaceable) return
         if (!materialAllowed(item.type, direction)) return
-        if (target.isOccupied && item.type != Material.LADDER) return
+        if (target.isOccupied && item.type !in bypassOccupied) return
+        if (item.type in preventReplication && clicked.type in preventReplication) return
 
         if (!attemptPlace(event)) {
             event.isCancelled = true
@@ -134,6 +153,7 @@ class InteractablePlaceListener : Listener {
         material in setOf(
             Material.STONE_BUTTON,
             Material.LADDER,
+            Material.TRAP_DOOR,
         ) && face !in setOf(
             BlockFace.NORTH,
             BlockFace.WEST,
@@ -174,13 +194,22 @@ class InteractablePlaceListener : Listener {
         val stateData = target.state.data
         if (stateData is Directional) {
             when (target.type) {
-                Material.LEVER if direction.modY != 0 -> {
-                    // taken straight out the Lever.java, very ugly, but its necessary
-                    when (player.faceLookingAtBlock(target)) {
-                        BlockFace.WEST, BlockFace.EAST -> stateData.data = (stateData.data.toInt() or 5).toByte()
-                        BlockFace.SOUTH, BlockFace.NORTH -> stateData.data = (stateData.data.toInt() or 6).toByte()
-                        else -> {}
+                Material.LEVER -> {
+                    if (direction.modY != 0) {
+                        // taken straight out the Lever.java, very ugly, but its necessary
+                        when (player.faceLookingAtBlockHorizontal(target)) {
+                            BlockFace.WEST, BlockFace.EAST -> stateData.data = (stateData.data.toInt() or 5).toByte()
+                            BlockFace.SOUTH, BlockFace.NORTH -> stateData.data = (stateData.data.toInt() or 6).toByte()
+                            else -> stateData.data = 2.toByte()
+                        }
+                    }  else {
+                        stateData.setFacingDirection(direction)
                     }
+                }
+                Material.PISTON_BASE, Material.PISTON_STICKY_BASE -> {
+                    stateData.setFacingDirection(
+                        player.faceLookingAtBlock(target).oppositeFace
+                    )
                 }
                 in playerAngledBlocks -> {
                     stateData.setFacingDirection(
