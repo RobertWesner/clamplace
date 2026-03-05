@@ -12,6 +12,7 @@ import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.inventory.ItemStack
 import org.bukkit.material.Directional
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
@@ -19,6 +20,14 @@ import org.bukkit.material.Directional
 // TODO: buckets!
 
 class InteractablePlaceListener : Listener {
+    val replaceable = setOf(
+        Material.AIR,
+        Material.WATER,
+        Material.STATIONARY_WATER,
+        Material.LAVA,
+        Material.STATIONARY_LAVA,
+    )
+
     val allowedClicked = setOf(
         Material.DISPENSER,
         Material.NOTE_BLOCK,
@@ -61,9 +70,9 @@ class InteractablePlaceListener : Listener {
             if (clicked.type !in allowedClicked) return
         }
         if (item.type === Material.AIR) return
-        if (target.type != Material.AIR) return
+        if (target.type !in replaceable) return
         if (!materialAllowed(item.type, direction)) return
-        if (target.isOccupied) return
+        if (target.isOccupied && item.type != Material.LADDER) return
 
         if (!attemptPlace(event)) {
             event.isCancelled = true
@@ -71,7 +80,11 @@ class InteractablePlaceListener : Listener {
             return
         }
 
-        player.inventory.removeItem(item.clone().apply { amount = 1 })
+        if (item.type in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET)) {
+            player.itemInHand.type = Material.BUCKET
+        } else {
+            player.inventory.removeItem(item.clone().apply { amount = 1 })
+        }
 
         event.isCancelled = true
     }
@@ -154,7 +167,7 @@ class InteractablePlaceListener : Listener {
         val revert = target.asRevertible()
 
         // change the block
-        target.type = item.type
+        target.type = targetType(item)
 
         // flip and twist
         val state = target.state
@@ -207,5 +220,11 @@ class InteractablePlaceListener : Listener {
         }
 
         return true
+    }
+
+    private fun targetType(item: ItemStack): Material = when (item.type) {
+        Material.WATER_BUCKET -> Material.WATER
+        Material.LAVA_BUCKET -> Material.LAVA
+        else -> item.type
     }
 }
