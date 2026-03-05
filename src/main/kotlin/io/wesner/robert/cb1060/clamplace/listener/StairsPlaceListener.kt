@@ -1,13 +1,13 @@
 package io.wesner.robert.cb1060.clamplace.listener
 
+import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.facing
-import org.bukkit.Bukkit
+import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import org.bukkit.Material
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.material.Stairs
 
@@ -29,14 +29,8 @@ class StairsPlaceListener : Listener {
     }
 
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
-        val (player, clicked, direction, target, item) = event.contextOrNull()!!
-
-        val originalType = target.type
-        val originalData = target.data
-        val revert = {
-            target.type = originalType
-            target.data = originalData
-        }
+        val (player, clicked, _, target, item) = event.contextOrNull()!!
+        val revert = target.asRevertible()
 
         target.type = item.type
 
@@ -47,18 +41,17 @@ class StairsPlaceListener : Listener {
         state.update(true)
         target.setData(stateData.data, true)
 
-        val placeEvent = BlockPlaceEvent(
-            target,
-            state,
-            clicked,
-            item,
-            player,
-            true
-        )
-
-        Bukkit.getPluginManager().callEvent(placeEvent)
-
-        if (placeEvent.isCancelled) return false.also { revert() }
+        if (
+            !isPlacementSuccessful(
+                target,
+                state,
+                clicked,
+                item,
+                player,
+            )
+        ) {
+            return false.also { revert() }
+        }
 
         return true
     }

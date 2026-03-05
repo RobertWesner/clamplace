@@ -5,9 +5,11 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.BlockState
 import org.bukkit.craftbukkit.entity.CraftEntity
 import org.bukkit.entity.Item
 import org.bukkit.entity.Player
+import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
@@ -102,3 +104,33 @@ fun BlockFace.rotate(steps: Int): BlockFace {
     val rot = (i + steps % 4 + 4) % 4
     return faces[rot]
 }
+
+fun Block.asRevertible(): () -> Unit {
+    val originalType = type
+    val originalData = data
+
+    return {
+        type = originalType
+        data = originalData
+    }
+}
+
+fun isPlacementSuccessful(
+    // wonderful naming from the real bukkit API, lovely!
+    placedBlock: Block,
+    replacedBlockState: BlockState,
+    placedAgainst: Block,
+    itemInHand: ItemStack,
+    thePlayer: Player,
+): Boolean =
+    BlockPlaceEvent(
+        placedBlock,
+        replacedBlockState,
+        placedAgainst,
+        itemInHand,
+        thePlayer,
+        true,
+    ).let {
+        Bukkit.getPluginManager().callEvent(it)
+        !it.isCancelled
+    }

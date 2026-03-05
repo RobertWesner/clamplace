@@ -1,7 +1,9 @@
 package io.wesner.robert.cb1060.clamplace.listener
 
+import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
+import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.relativeBlockFace
 import io.wesner.robert.cb1060.clamplace.rotate
 import org.bukkit.Bukkit
@@ -11,7 +13,6 @@ import org.bukkit.block.BlockFace
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.material.Directional
 
@@ -151,13 +152,7 @@ class InteractablePlaceListener : Listener {
 
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
         val (player, clicked, direction, target, item) = event.contextOrNull()!!
-
-        val originalType = target.type
-        val originalData = target.data
-        val revert = {
-            target.type = originalType
-            target.data = originalData
-        }
+        val revert = target.asRevertible()
 
         // change the block
         target.type = item.type
@@ -179,7 +174,7 @@ class InteractablePlaceListener : Listener {
                 }
                 in playerAngledBlocks -> {
                     // all blocks "fronts" are actually to their east, so I rotate them.
-                    // and pumpkin stuffs wants to be opposite apparently.
+                    // and pumpkin stuffs wants to be opposite, apparently.
                     stateData.setFacingDirection(
                         player.relativeBlockFace(target).rotate(1).let {
                             when (target.type) {
@@ -204,18 +199,17 @@ class InteractablePlaceListener : Listener {
             target.setData(stateData.data, true)
         }
 
-        val placeEvent = BlockPlaceEvent(
-            target,
-            state,
-            clicked,
-            item,
-            player,
-            true
-        )
-
-        Bukkit.getPluginManager().callEvent(placeEvent)
-
-        if (placeEvent.isCancelled) return false.also { revert() }
+        if (
+            !isPlacementSuccessful(
+                target,
+                state,
+                clicked,
+                item,
+                player,
+            )
+        ) {
+            return false.also { revert() }
+        }
 
         return true
     }
