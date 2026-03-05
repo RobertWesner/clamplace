@@ -5,8 +5,7 @@ import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
-import org.bukkit.Bukkit
-import org.bukkit.Effect
+import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.event.Event
@@ -56,25 +55,22 @@ class InteractablePlaceListener : Listener {
         val (player, clicked, direction, target, item) = event.contextOrNull()
             ?: return
 
-        if (!player.isSneaking) return
+        if (item.type !in alwaysAllowed) {
+            // only require sneak and stuff on those that are not always allowed
+            if (!player.isSneaking) return
+            if (clicked.type !in allowedClicked) return
+        }
         if (item.type === Material.AIR) return
-        if (clicked.type !in allowedClicked && item.type !in alwaysAllowed) return
         if (target.type != Material.AIR) return
         if (!materialAllowed(item.type, direction)) return
         if (target.isOccupied) return
 
-        // placery
         if (!attemptPlace(event)) {
             event.isCancelled = true
 
             return
         }
 
-        // sounds and stuff
-        // TODO: maybe not as annoying?
-        event.player.playEffect(target.location, Effect.STEP_SOUND, target.type.id) // that makes particles... :(
-
-        // -1 item credit
         player.inventory.removeItem(item.clone().apply { amount = 1 })
 
         event.isCancelled = true
@@ -170,14 +166,12 @@ class InteractablePlaceListener : Listener {
                     when (player.faceLookingAtBlock(target)) {
                         BlockFace.WEST, BlockFace.EAST -> stateData.data = (stateData.data.toInt() or 5).toByte()
                         BlockFace.SOUTH, BlockFace.NORTH -> stateData.data = (stateData.data.toInt() or 6).toByte()
-                        else -> {
-                            Bukkit.getLogger().info { direction.toString() }
-                        }
+                        else -> {}
                     }
                 }
                 in playerAngledBlocks -> {
                     stateData.setFacingDirection(
-                        player.faceLookingAtBlock(target).let {
+                        player.faceLookingAtBlockHorizontal(target).let {
                             when (target.type) {
                                 Material.PUMPKIN, Material.JACK_O_LANTERN -> it
                                 else -> it.oppositeFace

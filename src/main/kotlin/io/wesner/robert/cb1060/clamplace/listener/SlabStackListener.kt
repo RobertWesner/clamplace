@@ -2,6 +2,7 @@ package io.wesner.robert.cb1060.clamplace.listener
 
 import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
+import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import org.bukkit.Effect
 import org.bukkit.Material
@@ -20,15 +21,14 @@ class SlabStackListener : Listener {
 
         // must be targeting block directly above
         if (
-            target.location.blockX != clicked.location.blockX
-            || target.location.blockY != clicked.location.blockY + 1
-            || target.location.blockZ != clicked.location.blockZ
+            target.x != clicked.x
+            || target.y != clicked.y + 1
+            || target.z != clicked.z
         ) {
             return
         }
 
-        // can place normally, no issues
-        if (target.type == Material.AIR) return
+        if (target.type == Material.AIR && !target.isOccupied) return
 
         if (
             item.type != Material.STEP
@@ -48,8 +48,6 @@ class SlabStackListener : Listener {
                 player,
             )
         ) {
-            // TODO: maybe without particles... somehow?
-            event.player.playEffect(clicked.location, Effect.STEP_SOUND, clicked.type.id)
             event.isCancelled = true
         } else {
             revert()

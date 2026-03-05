@@ -104,6 +104,13 @@ fun Player.faceLookingAtBlock(block: Block): BlockFace =
         }
     }
 
+fun Player.faceLookingAtBlockHorizontal(block: Block): BlockFace =
+    faceLookingAtBlock(
+        location.x - (block.x + 0.5),
+        0.0,
+        location.z - (block.z + 0.5),
+    )
+
 fun Block.faceLookingAtBlock(block: Block): BlockFace =
     faceLookingAtBlock(
         (x - block.x).toDouble(),

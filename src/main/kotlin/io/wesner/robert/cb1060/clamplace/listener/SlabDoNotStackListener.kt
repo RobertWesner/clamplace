@@ -23,8 +23,6 @@ class SlabDoNotStackListener : Listener {
         val against = event.blockAgainst
         val item = event.itemInHand
 
-        Bukkit.getLogger().info { "block " + block.y.toString() }
-        Bukkit.getLogger().info { "against " + against.y.toString() }
         if (item.type != Material.STEP) return
         if (block.y >= against.y) return
 
@@ -35,7 +33,6 @@ class SlabDoNotStackListener : Listener {
                 else -> it
             }
         }
-        Bukkit.getLogger().info { targetFace.toString() }
 
         val realTarget = against.getRelative(targetFace)
         if (realTarget.type != Material.AIR) return
@@ -52,7 +49,7 @@ class SlabDoNotStackListener : Listener {
         block.type = item.type
 
         if (
-            isPlacementSuccessful(
+            !isPlacementSuccessful(
                 realTarget,
                 realTarget.state,
                 against,
@@ -60,9 +57,6 @@ class SlabDoNotStackListener : Listener {
                 player,
             )
         ) {
-            // TODO: maybe without particles... somehow?
-            event.player.playEffect(realTarget.location, Effect.STEP_SOUND, realTarget.type.id)
-        } else {
             revertBlock()
             revertTarget()
         }
