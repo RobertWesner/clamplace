@@ -10,11 +10,25 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
 
+// TODO: when stacking from below a ceiling it should also work!
+
 class SlabStackListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
-    fun onBlockPlace(event: PlayerInteractEvent) {
-        val (player, clicked, _, _, item) = event.contextOrNull()
+    fun onPlayerInteract(event: PlayerInteractEvent) {
+        val (player, clicked, _, target, item) = event.contextOrNull()
             ?: return
+
+        // must be targeting block directly above
+        if (
+            target.location.blockX != clicked.location.blockX
+            || target.location.blockY != clicked.location.blockY + 1
+            || target.location.blockZ != clicked.location.blockZ
+        ) {
+            return
+        }
+
+        // can place normally, no issues
+        if (target.type == Material.AIR) return
 
         if (
             item.type != Material.STEP

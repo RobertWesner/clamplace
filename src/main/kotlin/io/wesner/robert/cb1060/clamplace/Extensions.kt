@@ -57,6 +57,7 @@ fun PlayerInteractEvent.contextOrNull(): PlaceContext? = PlaceContext(
         ?: return null,
 )
 
+// the fact that BETA north != modern north is tripping me up constantly
 fun Player.facing(): BlockFace {
     val rot = ((location.yaw % 360) + 360) % 360
 
@@ -68,10 +69,10 @@ fun Player.facing(): BlockFace {
     }
 }
 
-fun Player.relativeBlockFace(block: Block): BlockFace {
-    val dx = location.x - (block.x + 0.5)
-    val dy = location.y + eyeHeight - (block.y + 0.5)
-    val dz = location.z - (block.z + 0.5)
+private fun faceLookingAtBlock(dx: Double, dy: Double, dz: Double): BlockFace {
+    if (dx == 0.0 && dy == 0.0 && dz == 0.0) {
+        return BlockFace.SELF
+    }
 
     val ax = kotlin.math.abs(dx)
     val ay = kotlin.math.abs(dy)
@@ -79,31 +80,43 @@ fun Player.relativeBlockFace(block: Block): BlockFace {
 
     return when {
         ay >= ax && ay >= az ->
-            if (dy > 0) BlockFace.UP
-            else BlockFace.DOWN
+            if (dy > 0) BlockFace.DOWN
+            else BlockFace.UP
         ax >= az ->
-            if (dx > 0) BlockFace.EAST
-            else BlockFace.WEST
+            if (dx > 0) BlockFace.NORTH
+            else BlockFace.SOUTH
         else ->
-            if (dz > 0) BlockFace.SOUTH
-            else BlockFace.NORTH
+            if (dz > 0) BlockFace.EAST
+            else BlockFace.WEST
     }
 }
 
-fun BlockFace.rotate(steps: Int): BlockFace {
-    val faces = arrayOf(
-        BlockFace.NORTH,
-        BlockFace.EAST,
-        BlockFace.SOUTH,
-        BlockFace.WEST
+fun Player.faceLookingAtBlock(block: Block): BlockFace =
+    faceLookingAtBlock(
+        location.x - (block.x + 0.5),
+        location.y + eyeHeight - (block.y + 0.5),
+        location.z - (block.z + 0.5),
+    ).let {
+        // ensure player is never BlockFace.SELF in absolute edge-cases
+        when {
+            it == BlockFace.SELF -> BlockFace.UP
+            else -> it
+        }
+    }
+
+fun Block.faceLookingAtBlock(block: Block): BlockFace =
+    faceLookingAtBlock(
+        (x - block.x).toDouble(),
+        (y - block.y).toDouble(),
+        (z - block.z).toDouble(),
     )
 
-    val i = faces.indexOf(this)
-    if (i == -1) return this
-
-    val rot = (i + steps % 4 + 4) % 4
-    return faces[rot]
-}
+fun Block.faceLookingAtBlockHorizontal(block: Block): BlockFace =
+    faceLookingAtBlock(
+        (x - block.x).toDouble(),
+        0.0,
+        (z - block.z).toDouble(),
+    )
 
 fun Block.asRevertible(): () -> Unit {
     val originalType = type

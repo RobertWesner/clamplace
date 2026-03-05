@@ -4,8 +4,7 @@ import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
-import io.wesner.robert.cb1060.clamplace.relativeBlockFace
-import io.wesner.robert.cb1060.clamplace.rotate
+import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import org.bukkit.Bukkit
 import org.bukkit.Effect
 import org.bukkit.Material
@@ -34,6 +33,7 @@ class InteractablePlaceListener : Listener {
         Material.STONE_BUTTON,
         Material.TRAP_DOOR,
     )
+
     val alwaysAllowed = setOf(
         Material.FENCE,
         Material.PUMPKIN,
@@ -44,7 +44,9 @@ class InteractablePlaceListener : Listener {
         Material.DISPENSER,
         Material.PISTON_STICKY_BASE,
         Material.PISTON_BASE,
+        Material.WOOD_STAIRS,
         Material.FURNACE,
+        Material.COBBLESTONE_STAIRS,
         Material.PUMPKIN,
         Material.JACK_O_LANTERN,
     )
@@ -165,7 +167,7 @@ class InteractablePlaceListener : Listener {
             when (target.type) {
                 Material.LEVER if direction.modY != 0 -> {
                     // taken straight out the Lever.java, very ugly, but its necessary
-                    when (player.relativeBlockFace(target)) {
+                    when (player.faceLookingAtBlock(target)) {
                         BlockFace.WEST, BlockFace.EAST -> stateData.data = (stateData.data.toInt() or 5).toByte()
                         BlockFace.SOUTH, BlockFace.NORTH -> stateData.data = (stateData.data.toInt() or 6).toByte()
                         else -> {
@@ -174,13 +176,11 @@ class InteractablePlaceListener : Listener {
                     }
                 }
                 in playerAngledBlocks -> {
-                    // all blocks "fronts" are actually to their east, so I rotate them.
-                    // and pumpkin stuffs wants to be opposite, apparently.
                     stateData.setFacingDirection(
-                        player.relativeBlockFace(target).rotate(1).let {
+                        player.faceLookingAtBlock(target).let {
                             when (target.type) {
-                                Material.PUMPKIN, Material.JACK_O_LANTERN -> it.oppositeFace
-                                else -> it
+                                Material.PUMPKIN, Material.JACK_O_LANTERN -> it
+                                else -> it.oppositeFace
                             }
                         }
                     )
