@@ -1,0 +1,6 @@
+name: clamplace
+main: io.wesner.robert.cb1060.clamplace.ClamPlace
+version: ${version}
+description: >
+    Clammy placement.
+commands: {}
