@@ -35,6 +35,7 @@ class InteractablePlaceListener : Listener {
         Material.TRAP_DOOR,
     )
     val alwaysAllowed = setOf(
+        Material.FENCE,
         Material.PUMPKIN,
         Material.JACK_O_LANTERN,
     )
