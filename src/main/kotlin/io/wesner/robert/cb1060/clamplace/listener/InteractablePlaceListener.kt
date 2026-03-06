@@ -64,6 +64,9 @@ class InteractablePlaceListener : Listener {
         Material.LEVER,
         Material.WATER_BUCKET,
         Material.LAVA_BUCKET,
+        Material.TORCH,
+        Material.REDSTONE_TORCH_ON,
+        Material.REDSTONE_TORCH_OFF,
     )
 
     val preventReplication = setOf(
