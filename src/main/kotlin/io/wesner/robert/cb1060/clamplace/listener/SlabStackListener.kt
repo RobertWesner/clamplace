@@ -8,6 +8,7 @@ import org.bukkit.Material
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerInteractEvent
 
 // TODO: when stacking from below a ceiling it should also work!
@@ -15,6 +16,8 @@ import org.bukkit.event.player.PlayerInteractEvent
 class SlabStackListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
+        if (event.action != Action.RIGHT_CLICK_BLOCK) return
+
         val (player, clicked, _, target, item) = event.contextOrNull()
             ?: return
 

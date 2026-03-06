@@ -8,12 +8,15 @@ import org.bukkit.Material
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.material.Stairs
 
 class StairsPlaceListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
+        if (event.action != Action.RIGHT_CLICK_BLOCK) return
+
         val player = event.player
         val item = event.item
 
