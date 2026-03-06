@@ -52,8 +52,9 @@ fun PlayerInteractEvent.contextOrNull(): PlaceContext? = PlaceContext(
     clickedBlock
         ?: return null,
     blockFace,
-    clickedBlock.getRelative(blockFace),
-    item.takeUnless { it.type === Material.AIR }
+    clickedBlock?.getRelative(blockFace)
+        ?: return null,
+    item?.takeUnless { it.type === Material.AIR }
         ?: return null,
 )
 
