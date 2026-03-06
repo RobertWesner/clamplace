@@ -39,7 +39,7 @@ class SlabStackListener : Listener {
         ) return
 
         val revert = clicked.asRevertible()
-        clicked.type = Material.DOUBLE_STEP
+        clicked.setTypeIdAndData(Material.DOUBLE_STEP.id, item.data.data, true)
 
         if (
             isPlacementSuccessful(

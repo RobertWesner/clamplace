@@ -17,9 +17,10 @@ class StairsPlaceListener : Listener {
     fun onPlayerInteract(event: PlayerInteractEvent) {
         if (event.action != Action.RIGHT_CLICK_BLOCK) return
 
-        val player = event.player
-        val item = event.item
+        val (player, _, _, target, item) = event.contextOrNull()
+            ?: return
 
+        if (target.type != Material.AIR) return
         if (item.type !in setOf(Material.WOOD_STAIRS, Material.COBBLESTONE_STAIRS)) return
         if (player.location.y.let { it - it.toInt() } != 0.5) return
 
