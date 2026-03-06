@@ -20,7 +20,7 @@ class ClamPlace : JavaPlugin() {
             InteractablePlaceListener(),
             StairsPlaceListener(),
             SlabStackListener(),
-            SlabDoNotStackListener(),
+//            SlabDoNotStackListener(),
         ).forEach { server.pluginManager.registerEvents(it, this) }
 
         logger.info("${description.name} was enabled!")

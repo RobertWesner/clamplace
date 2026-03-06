@@ -4,7 +4,6 @@ import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
-import org.bukkit.Effect
 import org.bukkit.Material
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler

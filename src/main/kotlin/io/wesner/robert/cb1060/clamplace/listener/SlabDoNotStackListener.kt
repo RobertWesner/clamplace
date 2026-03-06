@@ -14,6 +14,7 @@ import org.bukkit.event.block.BlockPlaceEvent
 
 // side-clicking a block diagonally to the top of a slab should not just merge the slab
 
+@Deprecated("very buggy and potentially a dupe since it actively fights vanilla behavior")
 class SlabDoNotStackListener : Listener {
     var ignored: Block? = null
 
