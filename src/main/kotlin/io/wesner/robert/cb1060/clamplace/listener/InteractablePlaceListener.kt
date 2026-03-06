@@ -189,7 +189,7 @@ class InteractablePlaceListener : Listener {
         val revert = target.asRevertible()
 
         // change the block
-        target.setTypeIdAndData(targetType(item).id, item.data.data, true)
+        target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
 
         // flip and twist
         val state = target.state
