@@ -116,15 +116,8 @@ class InteractablePlaceListener : Listener {
         // water and lava, we want!
         material in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET) -> true
 
-        // signs are the only other non-block item we tolerate
-        material == Material.SIGN && face in setOf(
-            BlockFace.NORTH,
-            BlockFace.WEST,
-            BlockFace.SOUTH,
-            BlockFace.EAST,
-        ) -> true
-
         // all others non-blocks get rejected, even: cane, cake, bed (complain enough and I might add)
+        // signs are janky, and we don't want them!
         material.id > Material.TRAP_DOOR.id -> false
 
         // stuff that does not make sense to place like that
@@ -193,7 +186,7 @@ class InteractablePlaceListener : Listener {
         val revert = target.asRevertible()
 
         // change the block
-        target.type = targetType(item)
+        clicked.setTypeIdAndData(targetType(item).id, item.data.data, true)
 
         // flip and twist
         val state = target.state
@@ -260,7 +253,6 @@ class InteractablePlaceListener : Listener {
     private fun targetType(item: ItemStack): Material = when (item.type) {
         Material.WATER_BUCKET -> Material.WATER
         Material.LAVA_BUCKET -> Material.LAVA
-        Material.SIGN -> Material.WALL_SIGN
         else -> item.type
     }
 }
