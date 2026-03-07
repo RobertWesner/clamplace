@@ -50,6 +50,7 @@ class SlabStackListener : Listener {
                 player,
             )
         ) {
+            player.inventory.removeItem(item.clone().apply { amount = 1 })
             event.isCancelled = true
         } else {
             revert()
