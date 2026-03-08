@@ -44,19 +44,24 @@ data class PlaceContext(
     val clicked: Block,
     val face: BlockFace,
     val target: Block,
-    val item: ItemStack
+    val item: ItemStack,
+    val below: Block,
 )
 
-fun PlayerInteractEvent.contextOrNull(): PlaceContext? = PlaceContext(
-    player,
-    clickedBlock
-        ?: return null,
-    blockFace,
-    clickedBlock?.getRelative(blockFace)
-        ?: return null,
-    item?.takeUnless { it.type === Material.AIR }
-        ?: return null,
-)
+fun PlayerInteractEvent.contextOrNull(): PlaceContext? {
+    val target = clickedBlock?.getRelative(blockFace)
+
+    return PlaceContext(
+        player,
+        clickedBlock
+            ?: return null,
+        blockFace,
+        target ?: return null,
+        item?.takeUnless { it.type === Material.AIR }
+            ?: return null,
+        target.getRelative(BlockFace.DOWN),
+    )
+}
 
 // the fact that BETA north != modern north is tripping me up constantly
 fun Player.facing(): BlockFace {

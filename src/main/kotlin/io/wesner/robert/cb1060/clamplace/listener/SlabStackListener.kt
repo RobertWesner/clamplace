@@ -12,6 +12,7 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerInteractEvent
 
 // TODO: when stacking from below a ceiling it should also work!
+// TODO: there seems to be a way to cancel collapse after all
 
 class SlabStackListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)

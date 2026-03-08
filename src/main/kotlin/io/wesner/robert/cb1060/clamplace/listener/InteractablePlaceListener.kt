@@ -1,5 +1,6 @@
 package io.wesner.robert.cb1060.clamplace.listener
 
+import io.wesner.robert.cb1060.clamplace.BlockGroup
 import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
@@ -17,85 +18,61 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.material.Directional
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
+// TODO: maybe add the chest stuffs, would be nice, but have to be careful
+// TODO: nether water :)
+// TODO: listener to prevent plate on fence from breaking
 
 class InteractablePlaceListener : Listener {
-    val replaceable = setOf(
-        Material.AIR,
-        Material.WATER,
-        Material.STATIONARY_WATER,
-        Material.LAVA,
-        Material.STATIONARY_LAVA,
-    )
-
-    val allowedClicked = setOf(
-        Material.DISPENSER,
-        Material.NOTE_BLOCK,
-        Material.BED_BLOCK,
-        Material.CHEST,
-        Material.WORKBENCH,
-        Material.FURNACE,
-        Material.BURNING_FURNACE,
-        Material.WOODEN_DOOR,
-        Material.LEVER,
-        Material.STONE_BUTTON,
-        Material.TRAP_DOOR,
-    )
-
-    val alwaysAllowed = setOf(
-        Material.FENCE,
-        Material.PUMPKIN,
-        Material.JACK_O_LANTERN,
-    )
-
-    val playerAngledBlocks = setOf(
-        Material.DISPENSER,
-        Material.PISTON_STICKY_BASE,
-        Material.PISTON_BASE,
-        Material.WOOD_STAIRS,
-        Material.FURNACE,
-        Material.COBBLESTONE_STAIRS,
-        Material.PUMPKIN,
-        Material.JACK_O_LANTERN,
-    )
-
-    val bypassOccupied = setOf(
-        Material.LADDER,
-        Material.STONE_BUTTON,
-        Material.LEVER,
-        Material.WATER_BUCKET,
-        Material.LAVA_BUCKET,
-        Material.TORCH,
-        Material.REDSTONE_TORCH_ON,
-        Material.REDSTONE_TORCH_OFF,
-    )
-
-    val preventReplication = setOf(
-        Material.LADDER,
-        Material.STONE_BUTTON,
-        Material.LEVER,
-        Material.TORCH,
-        Material.REDSTONE_TORCH_ON,
-        Material.REDSTONE_TORCH_OFF,
-        Material.TRAP_DOOR,
-    )
 
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
         if (event.action != Action.RIGHT_CLICK_BLOCK) return
 
-        val (player, clicked, direction, target, item) = event.contextOrNull()
+        val (player, clicked, direction, target, item, below) = event.contextOrNull()
             ?: return
 
-        if (item.type !in alwaysAllowed) {
+        val isPlateOnFence = item.type in setOf(Material.STONE_PLATE, Material.WOOD_PLATE) && below.type == Material.FENCE
+
+        if (item.type in BlockGroup.alwaysAllowed) {
+            // if player is not sneaking but clicked is interactable, do the interaction
+            if (!player.isSneaking && clicked.type in BlockGroup.interactable) return
+        } else if (
+            isPlateOnFence
+        ) {
+            // pass
+        } else {
             // only require sneak and stuff on those that are not always allowed
             if (!player.isSneaking) return
-            if (clicked.type !in allowedClicked) return
+            if (clicked.type !in BlockGroup.interactable) return
         }
+
         if (item.type === Material.AIR) return
-        if (target.type !in replaceable) return
+        if (target.type !in BlockGroup.replaceable) return
+
+        // make sure directions are safe
         if (!materialAllowed(item.type, direction)) return
-        if (target.isOccupied && item.type !in bypassOccupied) return
-        if (item.type in preventReplication && clicked.type in preventReplication) return
+
+        // torches and ladders can ignore occupation
+        if (target.isOccupied && item.type !in BlockGroup.bypassOccupied) return
+
+        // buttons and co require a solid block
+        if (
+            item.type in BlockGroup.requireSolidToAttachTo
+            && clicked.type !in BlockGroup.solid
+            && (
+                !isPlateOnFence
+            )
+        ) {
+            return
+        }
+
+        if (
+            item.type in BlockGroup.requireBottomSupport
+            && below.type !in BlockGroup.solid
+            && !isPlateOnFence
+        ) {
+            return
+        }
 
         if (!attemptPlace(event)) {
             event.isCancelled = true
@@ -137,20 +114,6 @@ class InteractablePlaceListener : Listener {
             Material.CACTUS,
         ) -> false
 
-        // things that can be problematic with /cprivate and such
-        material in setOf(
-            Material.SAPLING,
-            Material.LONG_GRASS,
-            Material.DEAD_BUSH,
-            Material.YELLOW_FLOWER,
-            Material.RED_ROSE,
-            Material.BROWN_MUSHROOM,
-            Material.RED_MUSHROOM,
-            Material.FIRE,
-            Material.REDSTONE_WIRE,
-            Material.CACTUS,
-        ) -> false
-
         // conditionally allowed
         material in setOf(
             Material.STONE_BUTTON,
@@ -161,23 +124,6 @@ class InteractablePlaceListener : Listener {
             BlockFace.WEST,
             BlockFace.SOUTH,
             BlockFace.EAST,
-        ) -> false
-        material in setOf(
-            Material.WOOD_PLATE,
-            Material.STONE_PLATE,
-            Material.SNOW,
-        ) && face != BlockFace.UP -> false
-        material in setOf(
-            Material.TORCH,
-            Material.LEVER,
-            Material.REDSTONE_TORCH_OFF,
-            Material.REDSTONE_TORCH_ON,
-        ) && face !in setOf(
-            BlockFace.NORTH,
-            BlockFace.WEST,
-            BlockFace.SOUTH,
-            BlockFace.EAST,
-            BlockFace.UP,
         ) -> false
 
         // blocks -> yes!
@@ -213,7 +159,7 @@ class InteractablePlaceListener : Listener {
                         player.faceLookingAtBlock(target).oppositeFace
                     )
                 }
-                in playerAngledBlocks -> {
+                in BlockGroup.playerAngledBlocks -> {
                     stateData.setFacingDirection(
                         player.faceLookingAtBlockHorizontal(target).let {
                             when (target.type) {
