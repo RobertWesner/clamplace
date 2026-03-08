@@ -88,6 +88,7 @@ class InteractablePlaceListener : Listener {
 
         if (
             item.type in BlockGroup.requireBottomSupport
+            && direction == BlockFace.DOWN
             && below.type !in BlockGroup.solid
             && !isPlateOnFence
         ) {
