@@ -217,6 +217,7 @@ class InteractablePlaceListener : Listener {
 
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
         val (player, clicked, direction, target, item) = event.contextOrNull()!!
+        val oldState = target.state
 
         // change the block
         val (place, check, revert) = when (item.type) {
@@ -254,7 +255,7 @@ class InteractablePlaceListener : Listener {
                  }, {
                     isPlacementSuccessful(
                         target,
-                        target.state,
+                        oldState,
                         clicked,
                         item,
                         player,
@@ -271,7 +272,7 @@ class InteractablePlaceListener : Listener {
                 }, {
                     isPlacementSuccessful(
                         target,
-                        target.state,
+                        oldState,
                         clicked,
                         item,
                         player,

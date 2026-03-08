@@ -49,6 +49,7 @@ class SlabDoNotStackListener : Listener {
             return
         }
 
+        val oldState = target.state
         ignored = target
         preserve = target.withSlabPreservation()
 
@@ -57,7 +58,7 @@ class SlabDoNotStackListener : Listener {
             // this needs to run, interactable will never fire PlaceEvent
             && !isPlacementSuccessful(
                 target,
-                target.state,
+                oldState,
                 clicked,
                 item,
                 player,

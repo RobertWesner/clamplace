@@ -38,6 +38,7 @@ class StairsPlaceListener : Listener {
 
         target.type = item.type
 
+        val oldState = target.state
         val state = target.state
         val stateData = target.state.data
         (stateData as Stairs).setFacingDirection(player.facing().oppositeFace)
@@ -48,7 +49,7 @@ class StairsPlaceListener : Listener {
         if (
             !isPlacementSuccessful(
                 target,
-                state,
+                oldState,
                 clicked,
                 item,
                 player,

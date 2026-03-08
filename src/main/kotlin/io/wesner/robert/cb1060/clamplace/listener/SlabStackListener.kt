@@ -45,6 +45,7 @@ class SlabStackListener : Listener {
         val (clear, restore) = realTarget.withSlabPreservation()
         val revert = realTarget.asRevertible()
 
+        val oldState = target.state
         clear()
         realTarget.setTypeIdAndData(Material.DOUBLE_STEP.id, item.data.data, true)
         restore()
@@ -52,7 +53,7 @@ class SlabStackListener : Listener {
         if (
             isPlacementSuccessful(
                 realTarget,
-                realTarget.state,
+                oldState,
                 realTarget,
                 item,
                 player,
