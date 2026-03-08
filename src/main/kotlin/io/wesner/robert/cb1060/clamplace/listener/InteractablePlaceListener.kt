@@ -51,10 +51,11 @@ class InteractablePlaceListener : Listener {
         if (item.type in BlockGroup.alwaysAllowed) {
             // if player is not sneaking but clicked is interactable, do the interaction
             if (!player.isSneaking && clicked.type in BlockGroup.interactable) return
-        } else if (
-            isPlateOnFence
-        ) {
+        } else if (isPlateOnFence) {
             // pass
+        } else if (direction == BlockFace.DOWN) {
+            // placing things below should always be handled by clamplace, now matter if interactable, to stay modern
+            // this allows levers and similar
         } else {
             // only require sneak and stuff on those that are not always allowed
             if (!player.isSneaking) return
@@ -73,6 +74,7 @@ class InteractablePlaceListener : Listener {
         // buttons and co require a solid block
         if (
             item.type in BlockGroup.requireSolidToAttachTo
+            && direction != BlockFace.DOWN
             && clicked.type !in BlockGroup.solid
             && (
                 !isPlateOnFence
@@ -133,10 +135,10 @@ class InteractablePlaceListener : Listener {
 
         when (item.type) {
             Material.WATER_BUCKET, Material.LAVA_BUCKET -> player.itemInHand.type = Material.BUCKET
-            Material.BUCKET -> player.itemInHand.type = when (original.first) {
-                Material.WATER, Material.STATIONARY_WATER -> Material.WATER_BUCKET
-                Material.LAVA, Material.STATIONARY_LAVA -> Material.LAVA_BUCKET
-                else -> null
+            Material.BUCKET -> when (original.first) {
+                Material.WATER, Material.STATIONARY_WATER -> player.itemInHand.type = Material.WATER_BUCKET
+                Material.LAVA, Material.STATIONARY_LAVA -> player.itemInHand.type = Material.LAVA_BUCKET
+                else -> {}
             }
             else -> player.inventory.removeItem(item.clone().apply { amount = 1 })
         }
