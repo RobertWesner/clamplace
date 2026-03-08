@@ -80,6 +80,7 @@ class SlabDoNotStackListener : Listener {
 
         // this needs to happen so there are no merges while setting them
         val (clear, restore) = preserve
+
         clear()
         target.setTypeIdAndData(item.type.id, item.data.data, true)
         restore()
