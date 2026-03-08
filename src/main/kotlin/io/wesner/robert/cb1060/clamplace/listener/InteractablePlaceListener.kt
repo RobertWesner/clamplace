@@ -50,6 +50,9 @@ class InteractablePlaceListener : Listener {
             return
         }
 
+        // return early without cancelling event so the other one can take over!
+        if (target.isOccupied && item.type in BlockGroup.stair) return
+
         // always cancel on sneak click on interactible to be close to modern and not have random interactions
         if (clicked.type in BlockGroup.interactable && player.isSneaking) event.isCancelled = true
 

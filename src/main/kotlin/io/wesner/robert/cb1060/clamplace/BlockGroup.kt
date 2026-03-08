@@ -173,6 +173,7 @@ object BlockGroup {
     )
 
     val step = setOf(Material.STEP, Material.DOUBLE_STEP)
+    val stair = setOf(Material.COBBLESTONE_STAIRS, Material.WOOD_STAIRS)
     val doorItem = setOf(Material.WOOD_DOOR, Material.IRON_DOOR)
 
     private fun materialRange(range: IntRange) = range.map { Material.getMaterial(it) }.toSet()
