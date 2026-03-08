@@ -8,6 +8,7 @@ import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
 import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
@@ -24,6 +25,7 @@ import org.bukkit.material.Rails
 // TODO: nether water :)
 // TODO: listener to prevent plate on fence from breaking
 // TODO: paintings could be nice
+// TODO: test empty bucket next to interactible
 
 class InteractablePlaceListener : Listener {
 
@@ -220,6 +222,12 @@ class InteractablePlaceListener : Listener {
             )
         ) {
             return false.also { revert() }
+        }
+
+        if (target.type in setOf(Material.WATER, Material.STATIONARY_WATER) && target.world.environment == World.Environment.NETHER) {
+            // retroactively turn into a no-op, should be more stable than preventing the placement,
+            // as the permission checks still need to pass
+            revert()
         }
 
         return true
