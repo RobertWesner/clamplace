@@ -160,3 +160,5 @@ fun isPlacementSuccessful(
         Bukkit.getPluginManager().callEvent(it)
         !it.isCancelled
     }
+
+val horizontalFaces = setOf(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)

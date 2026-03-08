@@ -7,8 +7,10 @@ import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
+import io.wesner.robert.cb1060.clamplace.horizontalFaces
 import org.bukkit.Material
 import org.bukkit.World
+import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
@@ -21,17 +23,14 @@ import org.bukkit.material.MaterialData
 import org.bukkit.material.Rails
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
-// TODO: maybe add the chest stuffs, would be nice, but have to be careful
-// TODO: nether water :)
-// TODO: listener to prevent plate on fence from breaking
 // TODO: paintings could be nice
-// TODO: test empty bucket next to interactible
 
 class InteractablePlaceListener : Listener {
-
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
         if (event.action != Action.RIGHT_CLICK_BLOCK) return
+        // always cancel on sneak click on interactible to be close to modern and not have random interactions
+        if (event.clickedBlock.type in BlockGroup.interactable && event.player.isSneaking) event.isCancelled = true
 
         val (player, clicked, direction, target, item, below) = event.contextOrNull()
             ?: return
@@ -70,6 +69,21 @@ class InteractablePlaceListener : Listener {
             )
         ) {
             return
+        }
+
+        // ensure proper chest state
+        when (item.type) {
+            Material.CHEST -> {
+                val getRelativeChests = { block: Block ->
+                    horizontalFaces.map { block.getRelative(it) }.filter{ it.type == Material.CHEST }
+                }
+
+                // I love Kotlin <3
+                val relatives = getRelativeChests(target)
+
+                if (relatives.count() >= 2 || relatives.any { getRelativeChests(it).count() > 0 }) return
+            }
+            else -> {}
         }
 
         if (
