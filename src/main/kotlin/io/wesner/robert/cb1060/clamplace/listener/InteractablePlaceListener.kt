@@ -8,12 +8,17 @@ import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
 import io.wesner.robert.cb1060.clamplace.horizontalFaces
+import io.wesner.robert.cb1060.clamplace.isPaintingSuccessful
 import net.minecraft.server.EntityPainting
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.craftbukkit.CraftServer
 import org.bukkit.craftbukkit.CraftWorld
+import org.bukkit.craftbukkit.entity.CraftEntity
+import org.bukkit.craftbukkit.entity.CraftPainting
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -205,10 +210,19 @@ class InteractablePlaceListener : Listener {
         else -> true
     }
 
+    @Suppress("MoveLambdaOutsideParentheses")
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
         val (player, clicked, direction, target, item) = event.contextOrNull()!!
 
-        val revert = when (item.type) {
+        // flip and twist
+        val state = target.state
+        val updateState = { stateData: MaterialData ->
+            state.data = stateData
+            state.update(true)
+            target.setData(stateData.data, true)
+        }
+
+        val (revert, check) = when (item.type) {
             Material.PAINTING -> {
                 val handle = (clicked.world as CraftWorld).handle
 
@@ -221,7 +235,14 @@ class InteractablePlaceListener : Listener {
                 })
                 handle.addEntity(entity)
 
-                ; { handle.removeEntity(entity) }
+                Pair({ handle.removeEntity(entity) }, {
+                    isPaintingSuccessful(
+                        CraftPainting(Bukkit.getServer() as CraftServer, entity),
+                        player,
+                        clicked,
+                        direction.oppositeFace,
+                    )
+                })
             }
             in BlockGroup.doorItem -> {
                 val targets = listOf(target, target.getRelative(BlockFace.UP))
@@ -230,23 +251,32 @@ class InteractablePlaceListener : Listener {
                 targets[0].setTypeIdAndData(targetType(item).id, 0.toByte(), true)
                 targets[1].setTypeIdAndData(targetType(item).id, 8.toByte(), true)
 
-                ; { reverts.forEach { it() } }
+
+                Pair({ reverts.forEach { it() } }, {
+                    isPlacementSuccessful(
+                        target,
+                        state,
+                        clicked,
+                        item,
+                        player,
+                    )
+                })
             }
             else -> {
                 val doRevert = target.asRevertible()
                 // change the block
                 target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
 
-                doRevert
+                Pair(doRevert, {
+                    isPlacementSuccessful(
+                        target,
+                        state,
+                        clicked,
+                        item,
+                        player,
+                    )
+                })
             }
-        }
-
-        // flip and twist
-        val state = target.state
-        val updateState = { stateData: MaterialData ->
-            state.data = stateData
-            state.update(true)
-            target.setData(stateData.data, true)
         }
 
         when (val stateData = target.state.data) {
@@ -328,15 +358,7 @@ class InteractablePlaceListener : Listener {
             }
         }
 
-        if (
-            !isPlacementSuccessful(
-                target,
-                state,
-                clicked,
-                item,
-                player,
-            )
-        ) {
+        if (!check()) {
             return false.also { revert() }
         }
 

@@ -8,8 +8,10 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockState
 import org.bukkit.craftbukkit.entity.CraftEntity
 import org.bukkit.entity.Item
+import org.bukkit.entity.Painting
 import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.painting.PaintingPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
@@ -57,8 +59,7 @@ fun PlayerInteractEvent.contextOrNull(): PlaceContext? {
             ?: return null,
         blockFace,
         target ?: return null,
-        item?.takeUnless { it.type === Material.AIR }
-            ?: return null,
+        item ?: ItemStack(Material.AIR),
         target.getRelative(BlockFace.DOWN),
     )
 }
@@ -156,6 +157,22 @@ fun isPlacementSuccessful(
         itemInHand,
         thePlayer,
         true,
+    ).let {
+        Bukkit.getPluginManager().callEvent(it)
+        !it.isCancelled
+    }
+
+fun isPaintingSuccessful(
+    painting: Painting,
+    player: Player,
+    block: Block,
+    blockFace: BlockFace,
+): Boolean =
+    PaintingPlaceEvent(
+        painting,
+        player,
+        block,
+        blockFace,
     ).let {
         Bukkit.getPluginManager().callEvent(it)
         !it.isCancelled
