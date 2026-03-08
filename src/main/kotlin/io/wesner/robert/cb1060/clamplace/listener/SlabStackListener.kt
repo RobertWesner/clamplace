@@ -34,7 +34,10 @@ class SlabStackListener : Listener {
 
         if (
             item.type != Material.STEP
-            || item.type != clicked.type
+            || item.type != when (direction) {
+                BlockFace.DOWN -> target.type
+                else -> clicked.type
+            }
             || item.data.data != clicked.data // if data.data != data, makes total sense!
         ) return
 

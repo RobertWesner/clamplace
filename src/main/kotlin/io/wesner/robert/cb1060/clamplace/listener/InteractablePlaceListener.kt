@@ -108,12 +108,16 @@ class InteractablePlaceListener : Listener {
 
         if (
             item.type in BlockGroup.requireBottomSupport
-            && !(
-                direction == BlockFace.DOWN
-                && item.type !in BlockGroup.requireBottomSupportOrAttachTo
-            )
             && below.type !in BlockGroup.solid
             && !isPlateOnFence
+        ) {
+            return
+        }
+
+        if (
+            item.type in BlockGroup.requireBottomSupportOrAttachTo
+            && direction == BlockFace.DOWN
+            && below.type !in BlockGroup.solid
         ) {
             return
         }
@@ -278,7 +282,7 @@ class InteractablePlaceListener : Listener {
                         player,
                     )
                 }, {
-                    doRevert
+                    doRevert()
                 })
             }
         }

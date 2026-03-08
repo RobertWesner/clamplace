@@ -137,8 +137,7 @@ fun Block.asRevertible(): () -> Unit {
     val originalData = data
 
     return {
-        type = originalType
-        data = originalData
+        setTypeIdAndData(originalType.id, originalData, true)
     }
 }
 

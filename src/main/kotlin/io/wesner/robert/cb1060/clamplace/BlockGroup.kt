@@ -143,11 +143,7 @@ object BlockGroup {
     val requireBottomSupport = setOf(
         Material.POWERED_RAIL,
         Material.DETECTOR_RAIL,
-        Material.TORCH,
-        Material.REDSTONE_TORCH_OFF,
-        Material.REDSTONE_TORCH_ON,
         Material.RAILS,
-        Material.LEVER,
         Material.STONE_PLATE,
         Material.WOOD_PLATE,
         Material.SNOW,
