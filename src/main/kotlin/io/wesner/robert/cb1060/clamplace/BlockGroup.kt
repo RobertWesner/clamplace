@@ -133,6 +133,13 @@ object BlockGroup {
         Material.TRAP_DOOR,
     )
 
+    val requireBottomSupportOrAttachTo = setOf(
+        Material.TORCH,
+        Material.REDSTONE_TORCH_OFF,
+        Material.REDSTONE_TORCH_ON,
+        Material.LEVER,
+    )
+
     val requireBottomSupport = setOf(
         Material.POWERED_RAIL,
         Material.DETECTOR_RAIL,
