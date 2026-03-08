@@ -104,9 +104,6 @@ object BlockGroup {
         Material.COBBLESTONE_STAIRS,
         Material.PUMPKIN,
         Material.JACK_O_LANTERN,
-        Material.POWERED_RAIL,
-        Material.DETECTOR_RAIL,
-        Material.RAILS,
     )
 
     val bypassOccupied = setOf(

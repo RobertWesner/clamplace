@@ -16,6 +16,8 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.material.Directional
+import org.bukkit.material.MaterialData
+import org.bukkit.material.Rails
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
 // TODO: maybe add the chest stuffs, would be nice, but have to be careful
@@ -140,49 +142,72 @@ class InteractablePlaceListener : Listener {
 
         // flip and twist
         val state = target.state
-        val stateData = target.state.data
-        if (stateData is Directional) {
-            when (target.type) {
-                Material.LEVER -> {
-                    if (direction.modY != 0) {
-                        // taken straight out the Lever.java, very ugly, but its necessary
-                        when (player.faceLookingAtBlockHorizontal(target)) {
-                            BlockFace.WEST, BlockFace.EAST -> stateData.data = (stateData.data.toInt() or 5).toByte()
-                            BlockFace.SOUTH, BlockFace.NORTH -> stateData.data = (stateData.data.toInt() or 6).toByte()
-                            else -> stateData.data = 2.toByte()
-                        }
-                    }  else {
-                        stateData.setFacingDirection(direction)
-                    }
-                }
-                Material.PISTON_BASE, Material.PISTON_STICKY_BASE -> {
-                    stateData.setFacingDirection(
-                        player.faceLookingAtBlock(target).oppositeFace
-                    )
-                }
-                in BlockGroup.playerAngledBlocks -> {
-                    stateData.setFacingDirection(
-                        player.faceLookingAtBlockHorizontal(target).let {
-                            when (target.type) {
-                                Material.PUMPKIN, Material.JACK_O_LANTERN -> it
-                                else -> it.oppositeFace
-                            }
-                        }
-                    )
-                }
-                else -> {
-                    stateData.setFacingDirection(
-                        when (target.type) {
-                            Material.LADDER -> direction.oppositeFace
-                            else -> direction
-                        }
-                    )
-                }
-            }
-
+        val updateState = { stateData: MaterialData ->
             state.data = stateData
             state.update(true)
             target.setData(stateData.data, true)
+        }
+        when (val stateData = target.state.data) {
+            is Directional -> {
+                when (target.type) {
+                    Material.LEVER -> {
+                        if (direction.modY != 0) {
+                            // taken straight out the Lever.java, very ugly, but its necessary
+                            when (player.faceLookingAtBlockHorizontal(target)) {
+                                BlockFace.WEST, BlockFace.EAST -> stateData.data =
+                                    (stateData.data.toInt() or 5).toByte()
+
+                                BlockFace.SOUTH, BlockFace.NORTH -> stateData.data =
+                                    (stateData.data.toInt() or 6).toByte()
+
+                                else -> stateData.data = 2.toByte()
+                            }
+                        } else {
+                            stateData.setFacingDirection(direction)
+                        }
+                    }
+
+                    Material.PISTON_BASE, Material.PISTON_STICKY_BASE -> {
+                        stateData.setFacingDirection(
+                            player.faceLookingAtBlock(target).oppositeFace
+                        )
+                    }
+
+                    in BlockGroup.playerAngledBlocks -> {
+                        stateData.setFacingDirection(
+                            player.faceLookingAtBlockHorizontal(target).let {
+                                when (target.type) {
+                                    Material.PUMPKIN, Material.JACK_O_LANTERN -> it
+                                    else -> it.oppositeFace
+                                }
+                            }
+                        )
+                    }
+
+                    else -> {
+                        stateData.setFacingDirection(
+                            when (target.type) {
+                                Material.LADDER -> direction.oppositeFace
+                                else -> direction
+                            }
+                        )
+                    }
+                }
+
+                updateState(stateData)
+            }
+            is Rails -> {
+                stateData.setDirection(
+                    player.faceLookingAtBlockHorizontal(target).let {
+                        when (target.type) {
+                            Material.PUMPKIN, Material.JACK_O_LANTERN -> it
+                            else -> it.oppositeFace
+                        }
+                    },
+                    false,
+                )
+                updateState(stateData)
+            }
         }
 
         if (
