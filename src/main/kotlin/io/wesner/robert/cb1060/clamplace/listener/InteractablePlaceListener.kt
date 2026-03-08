@@ -136,9 +136,12 @@ class InteractablePlaceListener : Listener {
 
         if (
             item.type == Material.CACTUS
-            && below.type !in setOf(
-                Material.SAND,
-                Material.CACTUS,
+            && (
+                below.type !in setOf(
+                    Material.SAND,
+                    Material.CACTUS,
+                )
+                || horizontalFaces.any { target.getRelative(it).type !in BlockGroup.replaceable }
             )
         ) {
             return
@@ -196,7 +199,7 @@ class InteractablePlaceListener : Listener {
         material.id > Material.TRAP_DOOR.id -> false
 
         // cactus only from below a ceiling
-        material == Material.CACTUS && face == BlockFace.DOWN -> false
+        material == Material.CACTUS && face != BlockFace.DOWN -> false
 
         // conditionally allowed
         material in setOf(
