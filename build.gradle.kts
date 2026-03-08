@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.wesner.robert.cb1060.clamplace"
-version = "1.1.1-dev"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
