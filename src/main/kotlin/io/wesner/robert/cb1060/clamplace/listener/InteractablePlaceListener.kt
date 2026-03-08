@@ -35,6 +35,7 @@ class InteractablePlaceListener : Listener {
 
         val (player, clicked, direction, target, item, below) = event.contextOrNull()
             ?: return
+        val original = Pair(target.type, target.data)
 
         val isPlateOnFence = item.type in setOf(Material.STONE_PLATE, Material.WOOD_PLATE) && below.type == Material.FENCE
 
@@ -85,10 +86,14 @@ class InteractablePlaceListener : Listener {
             return
         }
 
-        if (item.type in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET)) {
-            player.itemInHand.type = Material.BUCKET
-        } else {
-            player.inventory.removeItem(item.clone().apply { amount = 1 })
+        when (item.type) {
+            Material.WATER_BUCKET, Material.LAVA_BUCKET -> player.itemInHand.type = Material.BUCKET
+            Material.BUCKET -> player.itemInHand.type = when (original.first) {
+                Material.WATER, Material.STATIONARY_WATER -> Material.WATER_BUCKET
+                Material.LAVA, Material.STATIONARY_LAVA -> Material.LAVA_BUCKET
+                else -> null
+            }
+            else -> player.inventory.removeItem(item.clone().apply { amount = 1 })
         }
 
         event.isCancelled = true
@@ -99,7 +104,7 @@ class InteractablePlaceListener : Listener {
         material == Material.AIR -> false
 
         // water and lava, we want!
-        material in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET) -> true
+        material in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.BUCKET) -> true
 
         // all others non-blocks get rejected, even: cane, cake, bed (complain enough and I might add)
         // signs are janky, and we don't want them!
@@ -236,6 +241,7 @@ class InteractablePlaceListener : Listener {
     private fun targetType(item: ItemStack): Material = when (item.type) {
         Material.WATER_BUCKET -> Material.WATER
         Material.LAVA_BUCKET -> Material.LAVA
+        Material.BUCKET -> Material.AIR
         else -> item.type
     }
 }
