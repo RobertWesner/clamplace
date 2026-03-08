@@ -149,6 +149,7 @@ object BlockGroup {
         Material.FIRE,
         Material.REDSTONE_WIRE,
         Material.CAKE_BLOCK,
+        Material.CAKE,
         Material.WOOD_DOOR,
         Material.IRON_DOOR,
         Material.REDSTONE,
