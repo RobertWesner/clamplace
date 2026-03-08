@@ -8,10 +8,12 @@ import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
 import io.wesner.robert.cb1060.clamplace.horizontalFaces
+import net.minecraft.server.EntityPainting
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.craftbukkit.CraftWorld
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -23,8 +25,6 @@ import org.bukkit.material.MaterialData
 import org.bukkit.material.Rails
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
-// TODO: paintings could be nice
-// TODO: cantus special handling
 
 class InteractablePlaceListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
@@ -115,6 +115,16 @@ class InteractablePlaceListener : Listener {
             return
         }
 
+        if (
+            item.type == Material.CACTUS
+            && below.type !in setOf(
+                Material.SAND,
+                Material.CACTUS,
+            )
+        ) {
+            return
+        }
+
         if (!attemptPlace(event)) {
             event.isCancelled = true
 
@@ -138,29 +148,28 @@ class InteractablePlaceListener : Listener {
         // safety filter
         material == Material.AIR -> false
 
+        // paintings are now supported
+        material == Material.PAINTING && face in horizontalFaces -> true
+
+        // simply delicious
+        material in setOf(Material.CAKE, Material.CAKE_BLOCK) -> true
+
         // water and lava, we want!
         material in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.BUCKET) -> true
 
-        // all others non-blocks get rejected, even: cane, cake, bed (complain enough and I might add)
+        // all others non-blocks get rejected, even: cane, bed (complain enough and I might add)
         // signs are janky, and we don't want them!
         material.id > Material.TRAP_DOOR.id -> false
 
-        // stuff that does not make sense to place like that
-        material in setOf(
-            Material.CACTUS,
-        ) -> false
+        // cactus only from below a ceiling
+        material == Material.CACTUS && face == BlockFace.DOWN -> false
 
         // conditionally allowed
         material in setOf(
             Material.STONE_BUTTON,
             Material.LADDER,
             Material.TRAP_DOOR,
-        ) && face !in setOf(
-            BlockFace.NORTH,
-            BlockFace.WEST,
-            BlockFace.SOUTH,
-            BlockFace.EAST,
-        ) -> false
+        ) && face !in horizontalFaces -> false
 
         // blocks -> yes!
         else -> true
@@ -168,11 +177,30 @@ class InteractablePlaceListener : Listener {
 
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
         val (player, clicked, direction, target, item) = event.contextOrNull()!!
-        val revert = target.asRevertible()
 
-        // change the block
-        target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
+        val revert = when (item.type) {
+            Material.PAINTING -> {
+                val handle = (clicked.world as CraftWorld).handle
 
+                val entity = EntityPainting(handle, clicked.x, clicked.y, clicked.z, when (direction.oppositeFace) {
+                    BlockFace.NORTH -> 3
+                    BlockFace.EAST -> 2
+                    BlockFace.SOUTH -> 1
+                    BlockFace.WEST -> 0
+                    else -> -1
+                })
+                handle.addEntity(entity)
+
+                ; { handle.removeEntity(entity) }
+            }
+            else -> {
+                val doRevert = target.asRevertible()
+                // change the block
+                target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
+
+                doRevert
+            }
+        }
         // flip and twist
         val state = target.state
         val updateState = { stateData: MaterialData ->
@@ -268,6 +296,7 @@ class InteractablePlaceListener : Listener {
         Material.WATER_BUCKET -> Material.WATER
         Material.LAVA_BUCKET -> Material.LAVA
         Material.BUCKET -> Material.AIR
+        Material.CAKE -> Material.CAKE_BLOCK
         else -> item.type
     }
 }

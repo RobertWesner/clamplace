@@ -147,6 +147,7 @@ object BlockGroup {
         Material.RED_MUSHROOM,
         Material.FIRE,
         Material.REDSTONE_WIRE,
+        Material.CAKE_BLOCK,
     )
 
     val requireBottomDirt = setOf(
