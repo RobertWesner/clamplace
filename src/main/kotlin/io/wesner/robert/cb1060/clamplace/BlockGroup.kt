@@ -102,6 +102,8 @@ object BlockGroup {
         Material.COBBLESTONE_STAIRS,
         Material.PUMPKIN,
         Material.JACK_O_LANTERN,
+        Material.WOODEN_DOOR,
+        Material.IRON_DOOR_BLOCK,
     )
 
     val bypassOccupied = setOf(
@@ -147,17 +149,23 @@ object BlockGroup {
         Material.FIRE,
         Material.REDSTONE_WIRE,
         Material.CAKE_BLOCK,
+        Material.WOOD_DOOR,
+        Material.IRON_DOOR,
+        Material.REDSTONE,
+        Material.DIODE_BLOCK_ON,
+        Material.DIODE_BLOCK_OFF,
+        Material.DIODE,
     )
 
     val requireBottomDirt = setOf(
         Material.SAPLING,
         Material.LONG_GRASS,
-        Material.DEAD_BUSH,
         Material.YELLOW_FLOWER,
         Material.RED_ROSE,
     )
 
     val step = setOf(Material.STEP, Material.DOUBLE_STEP)
+    val doorItem = setOf(Material.WOOD_DOOR, Material.IRON_DOOR)
 
     private fun materialRange(range: IntRange) = range.map { Material.getMaterial(it) }.toSet()
 }

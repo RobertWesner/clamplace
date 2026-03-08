@@ -21,6 +21,7 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.material.Directional
+import org.bukkit.material.Door
 import org.bukkit.material.MaterialData
 import org.bukkit.material.Rails
 
@@ -118,11 +119,27 @@ class InteractablePlaceListener : Listener {
         }
 
         if (
+            item.type == Material.DEAD_BUSH
+            && below.type !in setOf(
+                Material.SAND,
+            )
+        ) {
+            return
+        }
+
+        if (
             item.type == Material.CACTUS
             && below.type !in setOf(
                 Material.SAND,
                 Material.CACTUS,
             )
+        ) {
+            return
+        }
+
+        if (
+            item.type in BlockGroup.doorItem
+            && target.getRelative(BlockFace.UP).type !in BlockGroup.replaceable
         ) {
             return
         }
@@ -158,6 +175,14 @@ class InteractablePlaceListener : Listener {
 
         // water and lava, we want!
         material in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.BUCKET) -> true
+
+        // some items are alright
+        material in setOf(
+            Material.WOOD_DOOR,
+            Material.IRON_DOOR,
+            Material.REDSTONE,
+            Material.DIODE,
+        ) -> true
 
         // all others non-blocks get rejected, even: cane, bed (complain enough and I might add)
         // signs are janky, and we don't want them!
@@ -195,6 +220,15 @@ class InteractablePlaceListener : Listener {
 
                 ; { handle.removeEntity(entity) }
             }
+            in BlockGroup.doorItem -> {
+                val targets = listOf(target, target.getRelative(BlockFace.UP))
+                val reverts = targets.map { it.asRevertible() }
+
+                targets[0].setTypeIdAndData(targetType(item).id, 0.toByte(), true)
+                targets[1].setTypeIdAndData(targetType(item).id, 8.toByte(), true)
+
+                ; { reverts.forEach { it() } }
+            }
             else -> {
                 val doRevert = target.asRevertible()
                 // change the block
@@ -203,6 +237,7 @@ class InteractablePlaceListener : Listener {
                 doRevert
             }
         }
+
         // flip and twist
         val state = target.state
         val updateState = { stateData: MaterialData ->
@@ -210,7 +245,36 @@ class InteractablePlaceListener : Listener {
             state.update(true)
             target.setData(stateData.data, true)
         }
+
         when (val stateData = target.state.data) {
+            is Door -> {
+                val above = target.getRelative(BlockFace.UP)
+                val aboveStateData = above.state.data as Door
+                val face = player.faceLookingAtBlockHorizontal(target).oppositeFace
+
+                listOf(stateData, aboveStateData).forEach { it.setFacingDirection(face) }
+                aboveStateData.isTopHalf = true
+
+                target.state.data = stateData
+                target.state.update(true)
+                target.setData(stateData.data, true)
+
+                above.state.data = aboveStateData
+                above.state.update(true)
+                above.setData(aboveStateData.data, true)
+            }
+            is Rails -> {
+                stateData.setDirection(
+                    player.faceLookingAtBlockHorizontal(target).let {
+                        when (target.type) {
+                            Material.PUMPKIN, Material.JACK_O_LANTERN -> it
+                            else -> it.oppositeFace
+                        }
+                    },
+                    false,
+                )
+                updateState(stateData)
+            }
             is Directional -> {
                 when (target.type) {
                     Material.LEVER -> {
@@ -259,18 +323,6 @@ class InteractablePlaceListener : Listener {
 
                 updateState(stateData)
             }
-            is Rails -> {
-                stateData.setDirection(
-                    player.faceLookingAtBlockHorizontal(target).let {
-                        when (target.type) {
-                            Material.PUMPKIN, Material.JACK_O_LANTERN -> it
-                            else -> it.oppositeFace
-                        }
-                    },
-                    false,
-                )
-                updateState(stateData)
-            }
         }
 
         if (
@@ -299,6 +351,10 @@ class InteractablePlaceListener : Listener {
         Material.LAVA_BUCKET -> Material.LAVA
         Material.BUCKET -> Material.AIR
         Material.CAKE -> Material.CAKE_BLOCK
+        Material.REDSTONE -> Material.REDSTONE_WIRE
+        Material.DIODE -> Material.DIODE_BLOCK_OFF
+        Material.WOOD_DOOR -> Material.WOODEN_DOOR
+        Material.IRON_DOOR -> Material.IRON_DOOR_BLOCK
         else -> item.type
     }
 }
