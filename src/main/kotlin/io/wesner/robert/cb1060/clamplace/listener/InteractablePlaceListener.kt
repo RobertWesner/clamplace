@@ -24,6 +24,7 @@ import org.bukkit.material.Rails
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
 // TODO: paintings could be nice
+// TODO: cantus special handling
 
 class InteractablePlaceListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
@@ -104,6 +105,16 @@ class InteractablePlaceListener : Listener {
             return
         }
 
+        if (
+            item.type in BlockGroup.requireBottomDirt
+            && below.type !in setOf(
+                Material.DIRT,
+                Material.GRASS,
+            )
+        ) {
+            return
+        }
+
         if (!attemptPlace(event)) {
             event.isCancelled = true
 
@@ -136,15 +147,6 @@ class InteractablePlaceListener : Listener {
 
         // stuff that does not make sense to place like that
         material in setOf(
-            Material.SAPLING,
-            Material.LONG_GRASS,
-            Material.DEAD_BUSH,
-            Material.YELLOW_FLOWER,
-            Material.RED_ROSE,
-            Material.BROWN_MUSHROOM,
-            Material.RED_MUSHROOM,
-            Material.FIRE,
-            Material.REDSTONE_WIRE,
             Material.CACTUS,
         ) -> false
 

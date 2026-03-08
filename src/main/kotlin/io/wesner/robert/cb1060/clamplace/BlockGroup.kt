@@ -115,6 +115,11 @@ object BlockGroup {
         Material.TORCH,
         Material.REDSTONE_TORCH_ON,
         Material.REDSTONE_TORCH_OFF,
+        Material.SAPLING,
+        Material.LONG_GRASS,
+        Material.DEAD_BUSH,
+        Material.YELLOW_FLOWER,
+        Material.RED_ROSE,
     )
 
     val requireSolidToAttachTo = setOf(
@@ -138,6 +143,18 @@ object BlockGroup {
         Material.STONE_PLATE,
         Material.WOOD_PLATE,
         Material.SNOW,
+        Material.BROWN_MUSHROOM,
+        Material.RED_MUSHROOM,
+        Material.FIRE,
+        Material.REDSTONE_WIRE,
+    )
+
+    val requireBottomDirt = setOf(
+        Material.SAPLING,
+        Material.LONG_GRASS,
+        Material.DEAD_BUSH,
+        Material.YELLOW_FLOWER,
+        Material.RED_ROSE,
     )
 
     private fun materialRange(range: IntRange) = range.map { Material.getMaterial(it) }.toSet()
