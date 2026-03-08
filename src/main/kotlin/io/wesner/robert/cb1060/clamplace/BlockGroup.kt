@@ -157,5 +157,7 @@ object BlockGroup {
         Material.RED_ROSE,
     )
 
+    val step = setOf(Material.STEP, Material.DOUBLE_STEP)
+
     private fun materialRange(range: IntRange) = range.map { Material.getMaterial(it) }.toSet()
 }

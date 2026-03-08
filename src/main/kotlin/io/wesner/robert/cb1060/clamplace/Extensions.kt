@@ -162,3 +162,22 @@ fun isPlacementSuccessful(
     }
 
 val horizontalFaces = setOf(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)
+
+fun Block.withSlabPreservation(): Pair<() -> Unit, () -> Unit> {
+    val toPreserve = this.chunk.let { chunk ->
+        // it HAS TO BE reversed, otherwise jankbukkit will merge them all again
+        (0..<this.y).reversed().map { y ->
+            val block = chunk.getBlock(this.x, y, this.z)
+
+            Triple(block, block.type, block.data)
+        }.filter {
+            it.first.type in BlockGroup.step
+            // DO NOT CHECK FOR DATA HERE (trust)
+        }
+    }
+
+    return Pair(
+        { toPreserve.forEach { (block) -> block.type = Material.AIR } },
+        { toPreserve.forEach { (block, type, data) -> block.setTypeIdAndData(type.id, data, true) } }
+    )
+}

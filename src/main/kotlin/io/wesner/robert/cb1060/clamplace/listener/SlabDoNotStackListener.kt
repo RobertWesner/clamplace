@@ -4,7 +4,7 @@ import io.wesner.robert.cb1060.clamplace.BlockGroup
 import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
-import org.bukkit.Material
+import io.wesner.robert.cb1060.clamplace.withSlabPreservation
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.event.Event
@@ -17,10 +17,8 @@ import org.bukkit.event.player.PlayerInteractEvent
 // side-clicking a block diagonally to the top of a slab should not just merge the slab
 
 class SlabDoNotStackListener : Listener {
-    val steps = setOf(Material.STEP, Material.DOUBLE_STEP)
-
     var ignored: Block? = null
-    var toPreserve: List<Triple<Block, Material, Byte>> = listOf()
+    var preserve = Pair({}, {})
 
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
@@ -44,25 +42,15 @@ class SlabDoNotStackListener : Listener {
         if (target.type !in BlockGroup.replaceable) return
 
         if (
-            item.type !in steps
-            || below.type !in steps
+            item.type !in BlockGroup.step
+            || below.type !in BlockGroup.step
             || item.type.data != below.type.data
         ) {
             return
         }
 
         ignored = target
-        toPreserve = target.chunk.let { chunk ->
-            // it HAS TO BE reversed, otherwise jankbukkit will merge them all again
-            (0..<target.y).reversed().map { y ->
-                val block = chunk.getBlock(target.x, y, target.z)
-
-                Triple(block, block.type, block.data)
-            }.filter {
-                it.first.type in steps
-                // DO NOT CHECK FOR DATA HERE (trust)
-            }
-        }
+        preserve = target.withSlabPreservation()
 
         if (
             !willFirePlaceEvent
@@ -76,7 +64,7 @@ class SlabDoNotStackListener : Listener {
             )
         ) {
             ignored = null
-            toPreserve = listOf()
+            preserve = Pair({}, {})
         }
     }
 
@@ -91,13 +79,13 @@ class SlabDoNotStackListener : Listener {
         val revert = target.asRevertible()
 
         // this needs to happen so there are no merges while setting them
-        toPreserve.forEach { (block) -> block.type = Material.AIR }
-
+        val (clear, restore) = preserve
+        clear()
         target.setTypeIdAndData(item.type.id, item.data.data, true)
-        toPreserve.forEach { (block, type, data) -> block.setTypeIdAndData(type.id, data, true) }
+        restore()
 
         ignored = null
-        toPreserve = listOf()
+        preserve = Pair({}, {})
 
         if (
             !isPlacementSuccessful(

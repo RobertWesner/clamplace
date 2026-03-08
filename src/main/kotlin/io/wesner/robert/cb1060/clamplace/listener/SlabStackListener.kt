@@ -4,6 +4,7 @@ import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
+import io.wesner.robert.cb1060.clamplace.withSlabPreservation
 import org.bukkit.Material
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
@@ -38,8 +39,11 @@ class SlabStackListener : Listener {
             || item.data.data != clicked.data // if data.data != data, makes total sense!
         ) return
 
+        val (clear, restore) = clicked.withSlabPreservation()
         val revert = clicked.asRevertible()
+        clear()
         clicked.setTypeIdAndData(Material.DOUBLE_STEP.id, item.data.data, true)
+        restore()
 
         if (
             isPlacementSuccessful(
