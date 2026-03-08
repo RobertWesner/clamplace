@@ -17,7 +17,6 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.craftbukkit.CraftServer
 import org.bukkit.craftbukkit.CraftWorld
-import org.bukkit.craftbukkit.entity.CraftEntity
 import org.bukkit.craftbukkit.entity.CraftPainting
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
@@ -210,19 +209,11 @@ class InteractablePlaceListener : Listener {
         else -> true
     }
 
-    @Suppress("MoveLambdaOutsideParentheses")
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
         val (player, clicked, direction, target, item) = event.contextOrNull()!!
 
-        // flip and twist
-        val state = target.state
-        val updateState = { stateData: MaterialData ->
-            state.data = stateData
-            state.update(true)
-            target.setData(stateData.data, true)
-        }
-
-        val (revert, check) = when (item.type) {
+        // change the block
+        val (place, check, revert) = when (item.type) {
             Material.PAINTING -> {
                 val handle = (clicked.world as CraftWorld).handle
 
@@ -233,52 +224,67 @@ class InteractablePlaceListener : Listener {
                     BlockFace.WEST -> 0
                     else -> -1
                 })
-                handle.addEntity(entity)
 
-                Pair({ handle.removeEntity(entity) }, {
+                Triple({
+                    handle.addEntity(entity)
+                }, {
                     isPaintingSuccessful(
                         CraftPainting(Bukkit.getServer() as CraftServer, entity),
                         player,
                         clicked,
                         direction.oppositeFace,
                     )
+                }, {
+                    handle.removeEntity(entity)
                 })
             }
             in BlockGroup.doorItem -> {
                 val targets = listOf(target, target.getRelative(BlockFace.UP))
                 val reverts = targets.map { it.asRevertible() }
 
-                targets[0].setTypeIdAndData(targetType(item).id, 0.toByte(), true)
-                targets[1].setTypeIdAndData(targetType(item).id, 8.toByte(), true)
-
-
-                Pair({ reverts.forEach { it() } }, {
+                Triple({
+                    targets[0].setTypeIdAndData(targetType(item).id, 0.toByte(), true)
+                    targets[1].setTypeIdAndData(targetType(item).id, 8.toByte(), true)
+                 }, {
                     isPlacementSuccessful(
                         target,
-                        state,
+                        target.state,
                         clicked,
                         item,
                         player,
                     )
+                }, {
+                    reverts.forEach { it() }
                 })
             }
             else -> {
                 val doRevert = target.asRevertible()
-                // change the block
-                target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
 
-                Pair(doRevert, {
+                Triple({
+                    target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
+                }, {
                     isPlacementSuccessful(
                         target,
-                        state,
+                        target.state,
                         clicked,
                         item,
                         player,
                     )
+                }, {
+                    doRevert
                 })
             }
         }
 
+        place()
+
+        // flip and twist
+        val state = target.state
+        val updateState = { stateData: MaterialData ->
+            state.data = stateData
+            state.update(true)
+            target.setData(stateData.data, true)
+        }
         when (val stateData = target.state.data) {
             is Door -> {
                 val above = target.getRelative(BlockFace.UP)
