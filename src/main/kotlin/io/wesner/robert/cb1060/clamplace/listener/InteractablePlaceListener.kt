@@ -29,14 +29,23 @@ class InteractablePlaceListener : Listener {
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
     fun onPlayerInteract(event: PlayerInteractEvent) {
         if (event.action != Action.RIGHT_CLICK_BLOCK) return
-        // always cancel on sneak click on interactible to be close to modern and not have random interactions
-        if (event.clickedBlock.type in BlockGroup.interactable && event.player.isSneaking) event.isCancelled = true
-
         val (player, clicked, direction, target, item, below) = event.contextOrNull()
             ?: return
         val original = Pair(target.type, target.data)
 
         val isPlateOnFence = item.type in setOf(Material.STONE_PLATE, Material.WOOD_PLATE) && below.type == Material.FENCE
+
+        // switch handling to other listener
+        if (
+            item.type === Material.STEP
+            && below.type === Material.STEP
+            && item.data.data == below.data
+        ) {
+            return
+        }
+
+        // always cancel on sneak click on interactible to be close to modern and not have random interactions
+        if (clicked.type in BlockGroup.interactable && player.isSneaking) event.isCancelled = true
 
         if (item.type in BlockGroup.alwaysAllowed) {
             // if player is not sneaking but clicked is interactable, do the interaction

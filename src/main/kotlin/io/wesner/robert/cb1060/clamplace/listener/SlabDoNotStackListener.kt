@@ -6,6 +6,7 @@ import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -28,6 +29,18 @@ class SlabDoNotStackListener : Listener {
         val (player, clicked, direction, target, item, below) = event.contextOrNull()
             ?: return
 
+        var willFirePlaceEvent = true
+        if (clicked.type in BlockGroup.interactable) {
+            willFirePlaceEvent = false
+            if (!player.isSneaking) {
+                return
+            }
+
+            event.isCancelled = true
+        }
+
+        // do not override the default slab fixes!
+        if (direction == BlockFace.UP) return
         if (target.type !in BlockGroup.replaceable) return
 
         if (
@@ -50,6 +63,21 @@ class SlabDoNotStackListener : Listener {
                 // DO NOT CHECK FOR DATA HERE (trust)
             }
         }
+
+        if (
+            !willFirePlaceEvent
+            // this needs to run, interactable will never fire PlaceEvent
+            && !isPlacementSuccessful(
+                target,
+                target.state,
+                clicked,
+                item,
+                player,
+            )
+        ) {
+            ignored = null
+            toPreserve = listOf()
+        }
     }
 
     @EventHandler(priority = Event.Priority.High, ignoreCancelled = true)
@@ -59,6 +87,7 @@ class SlabDoNotStackListener : Listener {
         // has to be player! because event.itemInHand does not have data for some reason
         val item = event.player.itemInHand
         val target = ignored ?: return
+        val player = event.player
         val revert = target.asRevertible()
 
         // this needs to happen so there are no merges while setting them
@@ -76,7 +105,7 @@ class SlabDoNotStackListener : Listener {
                 target.state,
                 event.blockAgainst,
                 item,
-                event.player,
+                player,
             )
         ) {
             revert()
