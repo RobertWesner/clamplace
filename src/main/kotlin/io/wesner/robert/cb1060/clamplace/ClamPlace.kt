@@ -1,6 +1,7 @@
 package io.wesner.robert.cb1060.clamplace
 
 import io.wesner.robert.cb1060.clamplace.listener.InteractablePlaceListener
+import io.wesner.robert.cb1060.clamplace.listener.KeepPlateOnFenceListener
 import io.wesner.robert.cb1060.clamplace.listener.SlabStackListener
 import io.wesner.robert.cb1060.clamplace.listener.StairsPlaceListener
 import org.bukkit.Bukkit
@@ -19,6 +20,7 @@ class ClamPlace : JavaPlugin() {
             InteractablePlaceListener(),
             StairsPlaceListener(),
             SlabStackListener(),
+            KeepPlateOnFenceListener(),
         ).forEach { server.pluginManager.registerEvents(it, this) }
 
         logger.info("${description.name} was enabled!")

@@ -1,4 +1,4 @@
-name: clamplace
+name: ClamPlace
 main: io.wesner.robert.cb1060.clamplace.ClamPlace
 version: ${version}
 description: >

@@ -21,6 +21,7 @@ import org.bukkit.material.Directional
 // TODO: maybe add the chest stuffs, would be nice, but have to be careful
 // TODO: nether water :)
 // TODO: listener to prevent plate on fence from breaking
+// TODO: paintings could be nice
 
 class InteractablePlaceListener : Listener {
 
