@@ -180,10 +180,10 @@ fun isPaintingSuccessful(
 val horizontalFaces = setOf(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)
 
 fun Block.withSlabPreservation(): Pair<() -> Unit, () -> Unit> {
-    val toPreserve = this.chunk.let { chunk ->
+    val toPreserve = chunk.let { chunk ->
         // it HAS TO BE reversed, otherwise jankbukkit will merge them all again
-        (0..<this.y).reversed().map { y ->
-            val block = chunk.getBlock(this.x, y, this.z)
+        (0..<y).reversed().map { y ->
+            val block = chunk.getBlock(x, y, z)
 
             Triple(block, block.type, block.data)
         }.filter {
