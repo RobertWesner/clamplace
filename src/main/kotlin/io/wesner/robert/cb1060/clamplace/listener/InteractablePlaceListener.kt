@@ -168,10 +168,20 @@ class InteractablePlaceListener : Listener {
         }
 
         when (item.type) {
-            Material.WATER_BUCKET, Material.LAVA_BUCKET -> player.itemInHand.type = Material.BUCKET
+            // setting bucket amounts to 1 mirrors vanilla behavior, see issue #3
+            Material.WATER_BUCKET, Material.LAVA_BUCKET -> {
+                player.itemInHand.type = Material.BUCKET
+                player.itemInHand.amount = 1
+            }
             Material.BUCKET -> when (original.first) {
-                Material.WATER, Material.STATIONARY_WATER -> player.itemInHand.type = Material.WATER_BUCKET
-                Material.LAVA, Material.STATIONARY_LAVA -> player.itemInHand.type = Material.LAVA_BUCKET
+                Material.WATER, Material.STATIONARY_WATER -> {
+                    player.itemInHand.type = Material.WATER_BUCKET
+                    player.itemInHand.amount = 1
+                }
+                Material.LAVA, Material.STATIONARY_LAVA -> {
+                    player.itemInHand.type = Material.LAVA_BUCKET
+                    player.itemInHand.amount = 1
+                }
                 else -> {}
             }
             else -> player.inventory.removeItem(item.clone().apply { amount = 1 })
