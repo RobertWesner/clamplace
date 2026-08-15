@@ -9,6 +9,7 @@ import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
 import io.wesner.robert.cb1060.clamplace.horizontalFaces
 import io.wesner.robert.cb1060.clamplace.isPaintingSuccessful
+import io.wesner.robert.cb1060.clamplace.takeItem
 import net.minecraft.server.EntityPainting
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -184,7 +185,7 @@ class InteractablePlaceListener : Listener {
                 }
                 else -> {}
             }
-            else -> player.inventory.removeItem(item.clone().apply { amount = 1 })
+            else -> player.takeItem(item.clone().apply { amount = 1 })
         }
 
         event.isCancelled = true
@@ -232,6 +233,9 @@ class InteractablePlaceListener : Listener {
     private fun attemptPlace(event: PlayerInteractEvent): Boolean {
         val (player, clicked, direction, target, item) = event.contextOrNull()!!
         val oldState = target.state
+
+        // guard against out of bounds blocks
+        if (target.y >= target.world.maxHeight - 1) return false
 
         // change the block
         val (place, check, revert) = when (item.type) {

@@ -4,11 +4,10 @@ import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
+import io.wesner.robert.cb1060.clamplace.takeItem
 import io.wesner.robert.cb1060.clamplace.withSlabPreservation
-import net.minecraft.server.AxisAlignedBB
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
-import org.bukkit.craftbukkit.entity.CraftPlayer
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -68,7 +67,7 @@ class SlabStackListener : Listener {
                 player,
             )
         ) {
-            player.inventory.removeItem(item.clone().apply { amount = 1 })
+            player.takeItem(item.clone().apply { amount = 1 }).getOrElse { revert() }
             event.isCancelled = true
         } else {
             revert()

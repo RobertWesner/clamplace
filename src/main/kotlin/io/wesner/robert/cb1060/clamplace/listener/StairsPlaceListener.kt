@@ -4,6 +4,7 @@ import io.wesner.robert.cb1060.clamplace.asRevertible
 import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.facing
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
+import io.wesner.robert.cb1060.clamplace.takeItem
 import org.bukkit.Material
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
@@ -28,7 +29,7 @@ class StairsPlaceListener : Listener {
             return
         }
 
-        player.inventory.removeItem(item.clone().apply { amount = 1 })
+        player.takeItem(item.clone().apply { amount = 1 })
         event.isCancelled = true
     }
 

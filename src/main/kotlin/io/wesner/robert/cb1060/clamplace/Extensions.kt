@@ -197,3 +197,28 @@ fun Block.withSlabPreservation(): Pair<() -> Unit, () -> Unit> {
         { toPreserve.forEach { (block, type, data) -> block.setTypeIdAndData(type.id, data, true) } }
     )
 }
+
+fun Player.hasItem(item: ItemStack): Boolean =
+    inventory.contents.any { it.type == item.type && it.data == item.data && it.amount >= item.amount }
+
+fun Player.takeItem(item: ItemStack): Result<ItemStack> =
+    if (hasItem(item)) {
+        // first try hand
+        if (itemInHand.type == item.type && itemInHand.data == item.data && itemInHand.amount >= item.amount) {
+            if (itemInHand.amount == item.amount) {
+                itemInHand = null
+            } else {
+                itemInHand.amount -= item.amount
+            }
+        } else {
+            inventory.removeItem(item)
+        }
+
+        Result.success(item)
+    } else {
+        ClamPlace.plugin.logger.severe { "Could not remove ${item.amount} ${item.type.name} from ${name}!" }
+        Result.failure(IllegalStateException("Could not take item ${item.type.name}*${item.amount}."))
+    }
+
+// unused for now
+fun Player.giveItem(item: ItemStack) = inventory.addItem(item).forEach { (_, stack) -> world.dropItemNaturally(location, stack) }
