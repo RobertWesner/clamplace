@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack
 private fun blockAabb(b: Block): AxisAlignedBB =
     AxisAlignedBB.b(
         b.x.toDouble(), b.y.toDouble(), b.z.toDouble(),
-        (b.x + 1).toDouble(), (b.y + 1).toDouble(), (b.z + 1).toDouble()
+        b.x + 1.0, b.y + 1.0, b.z + 1.0,
     )
 
 val Block.isOccupied: Boolean

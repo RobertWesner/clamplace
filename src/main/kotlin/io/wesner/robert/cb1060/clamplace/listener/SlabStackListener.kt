@@ -48,18 +48,8 @@ class SlabStackListener : Listener {
             else -> clicked
         }
 
-        // prevent colliding with player
-        // TODO: probably also worth checking other entities
-        if (
-            (player as CraftPlayer).handle.boundingBox.a(AxisAlignedBB.a(
-                realTarget.x.toDouble(),
-                realTarget.y.toDouble(),
-                realTarget.z.toDouble(),
-                realTarget.x + 1.0,
-                realTarget.y + 1.0,
-                realTarget.z + 1.0,
-            ))
-        ) return
+        // prevent colliding/clipping
+        if (realTarget.isOccupied) return
 
         val (clear, restore) = realTarget.withSlabPreservation()
         val revert = realTarget.asRevertible()
