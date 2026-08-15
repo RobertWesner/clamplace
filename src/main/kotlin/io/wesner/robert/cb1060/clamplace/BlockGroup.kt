@@ -85,6 +85,7 @@ object BlockGroup {
         Material.LAVA,
         Material.STATIONARY_LAVA,
         Material.FIRE,
+        Material.SNOW,
     )
 
     val alwaysAllowed = setOf(
