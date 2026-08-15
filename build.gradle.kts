@@ -1,10 +1,9 @@
 plugins {
     kotlin("jvm") version "2.3.10"
-    id("com.gradleup.shadow") version "8.3.6"
 }
 
 group = "io.wesner.robert.cb1060.clamplace"
-version = "1.1.2"
+version = "1.2.0"
 
 repositories {
     mavenCentral()
@@ -14,10 +13,17 @@ repositories {
 
 dependencies {
     implementation("com.legacyminecraft.poseidon:poseidon-craftbukkit:1.+")
+    implementation("org.betamc:kotlin-libs:1.0.0-kt2.3.0")
 }
 
 kotlin {
     jvmToolchain(8)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
 }
 
 tasks.processResources {
