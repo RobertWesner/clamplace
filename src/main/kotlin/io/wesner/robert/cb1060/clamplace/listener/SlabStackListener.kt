@@ -5,8 +5,10 @@ import io.wesner.robert.cb1060.clamplace.contextOrNull
 import io.wesner.robert.cb1060.clamplace.isOccupied
 import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.withSlabPreservation
+import net.minecraft.server.AxisAlignedBB
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
+import org.bukkit.craftbukkit.entity.CraftPlayer
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -45,6 +47,20 @@ class SlabStackListener : Listener {
             BlockFace.DOWN -> target
             else -> clicked
         }
+
+        // prevent colliding with player
+        // TODO: probably also worth checking other entities
+        if (
+            (player as CraftPlayer).handle.boundingBox.a(AxisAlignedBB.a(
+                realTarget.x.toDouble(),
+                realTarget.y.toDouble(),
+                realTarget.z.toDouble(),
+                realTarget.x + 1.0,
+                realTarget.y + 1.0,
+                realTarget.z + 1.0,
+            ))
+        ) return
+
         val (clear, restore) = realTarget.withSlabPreservation()
         val revert = realTarget.asRevertible()
 
