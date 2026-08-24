@@ -199,7 +199,7 @@ fun Block.withSlabPreservation(): Pair<() -> Unit, () -> Unit> {
 }
 
 fun Player.hasItem(item: ItemStack): Boolean =
-    inventory.contents.any { it.type == item.type && it.data == item.data && it.amount >= item.amount }
+    inventory.contents.any { it != null && it.type == item.type && it.data == item.data && it.amount >= item.amount }
 
 fun Player.takeItem(item: ItemStack): Result<ItemStack> =
     if (hasItem(item)) {
