@@ -31,6 +31,7 @@ import org.bukkit.material.Directional
 import org.bukkit.material.Door
 import org.bukkit.material.MaterialData
 import org.bukkit.material.Rails
+import org.bukkit.material.TrapDoor
 
 // this honestly took a lot of manual testing, but I am confident in my solutions
 
@@ -43,7 +44,10 @@ class InteractablePlaceListener : Listener {
         val original = Pair(target.type, target.data)
 
         val isPlateOnFence = item.type in setOf(Material.STONE_PLATE, Material.WOOD_PLATE) && below.type == Material.FENCE
-        val isTrapdoorOnSpecial = item.type == Material.TRAP_DOOR && clicked.type in BlockGroup.trapdoorAllowAttachTo
+        val isTrapdoorOnSpecial = item.type == Material.TRAP_DOOR && (
+            clicked.type in BlockGroup.trapdoorAllowAttachTo // also includes top-side clicks
+            || (direction == BlockFace.UP && clicked.type in BlockGroup.solid)
+        )
 
         // switch handling to other listener
         if (
@@ -228,8 +232,10 @@ class InteractablePlaceListener : Listener {
         material in setOf(
             Material.STONE_BUTTON,
             Material.LADDER,
-            Material.TRAP_DOOR,
         ) && face !in horizontalFaces -> false
+
+        // trapdoor has a special fix that allows it to be attached to a block below it
+        material == Material.TRAP_DOOR && face == BlockFace.DOWN -> false
 
         // blocks -> yes!
         else -> true
@@ -422,6 +428,14 @@ class InteractablePlaceListener : Listener {
                                 }
                             }
                         )
+                    }
+
+                    Material.TRAP_DOOR -> {
+                        val attachedTo = target.getRelative((target.state.data as TrapDoor).attachedFace)
+                        if (attachedTo.type !in BlockGroup.solid && attachedTo.type !in BlockGroup.trapdoorAllowAttachTo) {
+                            // must be a special attachment to below -> orient based on player
+                            stateData.setFacingDirection(player.faceLookingAtBlock(target).oppositeFace)
+                        }
                     }
 
                     else -> {

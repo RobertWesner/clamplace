@@ -138,7 +138,6 @@ object BlockGroup {
         Material.REDSTONE_TORCH_OFF,
         Material.REDSTONE_TORCH_ON,
         Material.STONE_BUTTON,
-        Material.TRAP_DOOR,
     )
 
     val requireBottomSupportOrAttachTo = setOf(
