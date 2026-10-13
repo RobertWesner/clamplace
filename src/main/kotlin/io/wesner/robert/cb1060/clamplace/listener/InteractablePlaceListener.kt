@@ -79,6 +79,7 @@ class InteractablePlaceListener : Listener {
             // only require sneak and stuff on those that are not always allowed
             if (!player.isSneaking) return
             if (clicked.type !in BlockGroup.interactable) return
+            if (item.type == Material.TRAP_DOOR && clicked.type == Material.TRAP_DOOR) return
         }
 
         if (item.type === Material.AIR) return
@@ -431,11 +432,12 @@ class InteractablePlaceListener : Listener {
                     }
 
                     Material.TRAP_DOOR -> {
-                        val attachedTo = target.getRelative((target.state.data as TrapDoor).attachedFace)
-                        if (attachedTo.type !in BlockGroup.solid && attachedTo.type !in BlockGroup.trapdoorAllowAttachTo) {
-                            // must be a special attachment to below -> orient based on player
-                            stateData.setFacingDirection(player.faceLookingAtBlock(target).oppositeFace)
-                        }
+                        stateData.setFacingDirection(
+                            when (direction) {
+                                BlockFace.UP -> player.faceLookingAtBlock(target).oppositeFace
+                                else -> direction
+                            }
+                        )
                     }
 
                     else -> {
