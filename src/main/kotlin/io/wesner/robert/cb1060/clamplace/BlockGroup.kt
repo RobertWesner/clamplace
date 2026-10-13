@@ -124,6 +124,13 @@ object BlockGroup {
         Material.RED_ROSE,
     )
 
+    val trapdoorAllowAttachTo = setOf(
+        Material.LEAVES,
+        Material.GLASS,
+        Material.ICE,
+        Material.FENCE,
+    )
+
     val requireSolidToAttachTo = setOf(
         Material.TORCH,
         Material.LADDER,

@@ -43,6 +43,7 @@ class InteractablePlaceListener : Listener {
         val original = Pair(target.type, target.data)
 
         val isPlateOnFence = item.type in setOf(Material.STONE_PLATE, Material.WOOD_PLATE) && below.type == Material.FENCE
+        val isTrapdoorOnSpecial = item.type == Material.TRAP_DOOR && clicked.type in BlockGroup.trapdoorAllowAttachTo
 
         // switch handling to other listener
         if (
@@ -62,7 +63,10 @@ class InteractablePlaceListener : Listener {
         if (item.type in BlockGroup.alwaysAllowed) {
             // if player is not sneaking but clicked is interactable, do the interaction
             if (!player.isSneaking && clicked.type in BlockGroup.interactable) return
-        } else if (isPlateOnFence) {
+        } else if (
+            isPlateOnFence
+            || isTrapdoorOnSpecial
+        ) {
             // pass
         } else if (direction == BlockFace.DOWN) {
             // placing things below should always be handled by clamplace, now matter if interactable, to stay modern
@@ -87,9 +91,8 @@ class InteractablePlaceListener : Listener {
             item.type in BlockGroup.requireSolidToAttachTo
             && direction != BlockFace.DOWN
             && clicked.type !in BlockGroup.solid
-            && (
-                !isPlateOnFence
-            )
+            && !isPlateOnFence
+            && !isTrapdoorOnSpecial
         ) {
             return
         }

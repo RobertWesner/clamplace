@@ -1,7 +1,7 @@
 package io.wesner.robert.cb1060.clamplace
 
 import io.wesner.robert.cb1060.clamplace.listener.InteractablePlaceListener
-import io.wesner.robert.cb1060.clamplace.listener.KeepPlateOnFenceListener
+import io.wesner.robert.cb1060.clamplace.listener.PreventSpecialPhysicsBreakageListener
 import io.wesner.robert.cb1060.clamplace.listener.SlabDoNotStackListener
 import io.wesner.robert.cb1060.clamplace.listener.SlabStackListener
 import io.wesner.robert.cb1060.clamplace.listener.StairsPlaceListener
@@ -28,7 +28,7 @@ class ClamPlace : JavaPlugin() {
             StairsPlaceListener(),
             SlabStackListener(),
             SlabDoNotStackListener(),
-            KeepPlateOnFenceListener(),
+            PreventSpecialPhysicsBreakageListener(),
         ).forEach { server.pluginManager.registerEvents(it, this) }
 
         logger.info("${description.name} was enabled!")
