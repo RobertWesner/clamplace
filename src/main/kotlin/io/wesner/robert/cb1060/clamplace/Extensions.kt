@@ -12,6 +12,8 @@ import org.bukkit.entity.Painting
 import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.painting.PaintingPlaceEvent
+import org.bukkit.event.player.PlayerBucketEmptyEvent
+import org.bukkit.event.player.PlayerBucketFillEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
@@ -172,6 +174,42 @@ fun isPaintingSuccessful(
         player,
         block,
         blockFace,
+    ).let {
+        Bukkit.getPluginManager().callEvent(it)
+        !it.isCancelled
+    }
+
+fun isBucketFillSuccessful(
+    who: Player,
+    blockClicked: Block,
+    blockFace: BlockFace,
+    bucket: Material,
+    itemInHand: ItemStack,
+): Boolean =
+    PlayerBucketFillEvent(
+        who,
+        blockClicked,
+        blockFace,
+        bucket,
+        itemInHand,
+    ).let {
+        Bukkit.getPluginManager().callEvent(it)
+        !it.isCancelled
+    }
+
+fun isBucketEmptySuccessful(
+    who: Player,
+    blockClicked: Block,
+    blockFace: BlockFace,
+    bucket: Material,
+    itemInHand: ItemStack
+): Boolean =
+    PlayerBucketEmptyEvent(
+        who,
+        blockClicked,
+        blockFace,
+        bucket,
+        itemInHand,
     ).let {
         Bukkit.getPluginManager().callEvent(it)
         !it.isCancelled

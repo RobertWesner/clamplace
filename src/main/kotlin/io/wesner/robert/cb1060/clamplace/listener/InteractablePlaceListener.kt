@@ -8,6 +8,8 @@ import io.wesner.robert.cb1060.clamplace.isPlacementSuccessful
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlock
 import io.wesner.robert.cb1060.clamplace.faceLookingAtBlockHorizontal
 import io.wesner.robert.cb1060.clamplace.horizontalFaces
+import io.wesner.robert.cb1060.clamplace.isBucketEmptySuccessful
+import io.wesner.robert.cb1060.clamplace.isBucketFillSuccessful
 import io.wesner.robert.cb1060.clamplace.isPaintingSuccessful
 import io.wesner.robert.cb1060.clamplace.takeItem
 import net.minecraft.server.EntityPainting
@@ -282,6 +284,40 @@ class InteractablePlaceListener : Listener {
                     reverts.forEach { it() }
                 })
             }
+            Material.BUCKET -> {
+                val doRevert = target.asRevertible()
+
+                Triple({
+                    target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
+                 }, {
+                    isBucketFillSuccessful(
+                        player,
+                        target,
+                        BlockFace.SELF,
+                        Material.BUCKET,
+                        item,
+                    )
+                }, {
+                    doRevert()
+                })
+            }
+            in setOf(Material.WATER_BUCKET, Material.LAVA_BUCKET) -> {
+                val doRevert = target.asRevertible()
+
+                Triple({
+                    target.setTypeIdAndData(targetType(item).id, item.data?.data ?: 0.toByte(), true)
+                }, {
+                    isBucketEmptySuccessful(
+                        player,
+                        target,
+                        BlockFace.SELF,
+                        item.type,
+                        item,
+                    )
+                }, {
+                    doRevert()
+                })
+            }
             else -> {
                 val doRevert = target.asRevertible()
 
@@ -299,6 +335,16 @@ class InteractablePlaceListener : Listener {
                     doRevert()
                 })
             }
+        }
+
+        var alreadyChecked = false
+        // fun fact: playerbucket events need to fire before the block is changed, which makes sense, but all the janky block events always need to fire after
+        if (item.type in setOf(Material.BUCKET, Material.WATER_BUCKET, Material.LAVA_BUCKET)) {
+            if (!check()) {
+                return false // no revert needed
+            }
+
+            alreadyChecked = true
         }
 
         place()
@@ -389,7 +435,7 @@ class InteractablePlaceListener : Listener {
             }
         }
 
-        if (!check()) {
+        if (!alreadyChecked && !check()) {
             return false.also { revert() }
         }
 
