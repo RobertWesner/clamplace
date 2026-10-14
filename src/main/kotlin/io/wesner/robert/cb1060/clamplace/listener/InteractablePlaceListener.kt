@@ -66,7 +66,7 @@ class InteractablePlaceListener : Listener {
 
         if (item.type in BlockGroup.alwaysAllowed) {
             // if player is not sneaking but clicked is interactable, do the interaction
-            if (!player.isSneaking && clicked.type in BlockGroup.interactable) return
+            if (!player.isSneaking && clicked.type in BlockGroup.interactable && clicked.type !in BlockGroup.pseudoInteractable) return
         } else if (
             isPlateOnFence
             || isTrapdoorOnSpecial
@@ -76,9 +76,11 @@ class InteractablePlaceListener : Listener {
             // placing things below should always be handled by clamplace, now matter if interactable, to stay modern
             // this allows levers and similar
         } else {
-            // only require sneak and stuff on those that are not always allowed
-            if (!player.isSneaking) return
+            // only require sneak and stuff on those that are not always allowed or pseudo-interactables
+            if (!player.isSneaking && clicked.type !in BlockGroup.pseudoInteractable) return
+            // if its not interactable, this handler is not necessary
             if (clicked.type !in BlockGroup.interactable) return
+            // no trap door stacking in beta!! >:(
             if (item.type == Material.TRAP_DOOR && clicked.type == Material.TRAP_DOOR) return
         }
 
@@ -250,7 +252,7 @@ class InteractablePlaceListener : Listener {
         if (target.y >= target.world.maxHeight - 1) return false
 
         // change the block
-        val (place, check, revert) = when (item.type) {
+        var (place, check, revert) = when (item.type) {
             Material.PAINTING -> {
                 val handle = (clicked.world as CraftWorld).handle
 
@@ -347,6 +349,29 @@ class InteractablePlaceListener : Listener {
             }
         }
 
+        // trust the process (see BlockGroup.torch for details)
+        // this is so utterly deranged, yet the single most elegant solution, fucking hell
+        if (item.type in BlockGroup.torch && target.y >= 1) {
+            val p = place
+            val r = revert
+            val below = target.getRelative(BlockFace.DOWN)
+            val revertBelow = below.asRevertible()
+
+            if (below.type !in BlockGroup.solid || below.type in BlockGroup.pseudoInteractable) {
+                place = {
+                    // yep, if there is no block below, we 0-tick fake one and make it vanish before the client even knows
+                    below.setTypeIdAndData(Material.STONE.id, 0.toByte(), false)
+                    p()
+                    revertBelow()
+                    true
+                }
+                revert = {
+                    revertBelow()
+                    r()
+                }
+            }
+        }
+
         var alreadyChecked = false
         // fun fact: playerbucket events need to fire before the block is changed, which makes sense, but all the janky block events always need to fire after
         if (item.type in setOf(Material.BUCKET, Material.WATER_BUCKET, Material.LAVA_BUCKET)) {
@@ -424,7 +449,7 @@ class InteractablePlaceListener : Listener {
                         stateData.setFacingDirection(
                             player.faceLookingAtBlockHorizontal(target).let {
                                 when (target.type) {
-                                    Material.PUMPKIN, Material.JACK_O_LANTERN -> it
+                                    Material.PUMPKIN, Material.JACK_O_LANTERN, Material.DIODE_BLOCK_OFF, Material.DIODE_BLOCK_ON -> it
                                     else -> it.oppositeFace
                                 }
                             }

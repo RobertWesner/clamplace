@@ -12,7 +12,6 @@ object BlockGroup {
         Material.LAVA,
         Material.STATIONARY_LAVA,
         Material.LEAVES,
-        Material.GLASS,
         Material.BED_BLOCK,
         Material.POWERED_RAIL,
         Material.DETECTOR_RAIL,
@@ -47,7 +46,6 @@ object BlockGroup {
         Material.REDSTONE_TORCH_ON,
         Material.STONE_BUTTON,
         Material.SNOW,
-        Material.ICE,
         Material.CACTUS,
         Material.SUGAR_CANE_BLOCK,
         Material.FENCE,
@@ -59,6 +57,13 @@ object BlockGroup {
         Material.TRAP_DOOR,
     ) }
 
+    // not truly interactable, but you cant actually place things on these "normally" before release 1.15
+    val pseudoInteractable = setOf(
+        Material.GLASS,
+        Material.ICE,
+    )
+
+    // includes pseudo
     val interactable = setOf(
         Material.NOTE_BLOCK,
         Material.BED_BLOCK,
@@ -76,7 +81,7 @@ object BlockGroup {
         Material.CAKE_BLOCK,
         Material.LOCKED_CHEST,
         Material.TRAP_DOOR,
-    )
+    ) + pseudoInteractable
 
     val replaceable = setOf(
         Material.AIR,
@@ -105,6 +110,8 @@ object BlockGroup {
         Material.JACK_O_LANTERN,
         Material.WOODEN_DOOR,
         Material.IRON_DOOR_BLOCK,
+        Material.DIODE_BLOCK_OFF,
+        Material.DIODE_BLOCK_ON,
     )
 
     val bypassOccupied = setOf(
@@ -173,6 +180,16 @@ object BlockGroup {
         Material.LONG_GRASS,
         Material.YELLOW_FLOWER,
         Material.RED_ROSE,
+    )
+
+    // server auto-breaks these on top of glass and ice, no way to prevent that, since no events fire
+    // youd think, but what if? it happens on sides too if below the torch is not solid, so...
+    // god have mercy on us, it actually worked
+    // if anyone finds this madness, yes, placing a stone block below and instantly undoing it IS the solution
+    val torch = setOf(
+        Material.TORCH,
+        Material.REDSTONE_TORCH_OFF,
+        Material.REDSTONE_TORCH_ON,
     )
 
     val step = setOf(Material.STEP, Material.DOUBLE_STEP)
