@@ -91,7 +91,7 @@ class InteractablePlaceListener : Listener {
         if (!materialAllowed(item.type, direction)) return
 
         // torches and ladders can ignore occupation
-        if (target.isOccupied && item.type !in BlockGroup.bypassOccupied) return
+        if (target.isOccupied && targetType(item) !in BlockGroup.bypassOccupied) return
 
         // buttons and co require a solid block
         if (

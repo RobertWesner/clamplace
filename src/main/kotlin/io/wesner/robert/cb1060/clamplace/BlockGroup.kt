@@ -129,6 +129,7 @@ object BlockGroup {
         Material.DEAD_BUSH,
         Material.YELLOW_FLOWER,
         Material.RED_ROSE,
+        Material.REDSTONE_WIRE,
     )
 
     val trapdoorAllowAttachTo = setOf(
